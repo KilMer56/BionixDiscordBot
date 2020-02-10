@@ -16,8 +16,10 @@ const YoutubeCommands = require('./commands/YoutubeCommands.js');
 require('dotenv').config();
 const config = process.env;
 
+const time = Date.now();
+
 // Prepare the log file
-const log_file = fs.createWriteStream(__dirname + '/logs/debug.log', { flags: 'w' });
+const log_file = fs.createWriteStream(__dirname + '/logs/debug-' + time + '.log', { flags: 'w' });
 const log_stdout = process.stdout;
 const client = new Discord.Client();
 
