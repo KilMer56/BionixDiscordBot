@@ -1,3 +1,6 @@
+// Get the utils functions
+const Utils = require('../utils/discordUtils.js');
+
 class AudioCommands {
     constructor() {
         this.state = {};
@@ -6,17 +9,17 @@ class AudioCommands {
     }
 
     shutUpUser(message) {
-        const args = message.content.trim().split(' ').slice(1);
+        const args = Utils.getArgs(message);
 
         if (args.length > 1) {
             const username = args[1];
 
             if (this.usernameInVoiceChannel(message.member.voiceChannel.members, username)) {
-                message.reply(`Listening to ${username} and waiting to scream`);
+                Utils.displayText(message, `Listening to ${username} and waiting to scream`);
                 this.state['shutUp'] = username;
             }
             else {
-                message.reply(`${username} not in the server !`);
+                Utils.displayText(message, `${username} not in the server !`);
             }
         }
     }
@@ -34,50 +37,32 @@ class AudioCommands {
     async joinVoiceChannel(message) {
         if (message.member.voiceChannel) {
             if (!message.member.voiceChannel.joinable) {
-                message.reply('I can\'t join the channel !');
+                Utils.displayText(message, 'I can\'t join the channel !');
             }
             else {
                 this.connection = await message.member.voiceChannel.join();
                 this.inChannel = true;
 
-                message.reply('I have successfully connected to the channel!');
-                // message.member.voiceChannel.join()
-                //     .then(connection => {
-                //         this.connection = connection;
-                //         this.inChannel = true;
-
-                //         message.reply('I have successfully connected to the channel!');
-
-                //         connection.on('error', console.error);
-
-                //         connection.on('speaking', (user, speaking) => {
-
-                //             if (speaking
-                //                 && this.state['shutUp'] != null
-                //                 && this.state['shutUp'] == user.username) {
-                //                 console.log("LISTENING TO YOU !");
-                //             }
-                //         });
-                //     });
+                Utils.displayText(message, 'I have successfully connected to the channel!');
             }
         }
         else {
-            message.reply('You need to join a voice channel first!');
+            Utils.displayText(message, 'You need to join a voice channel first!');
         }
     }
 
     leaveVoiceChannel(message) {
         if (message.member.voiceChannel) {
             if (message.guild.me.voiceChannelID !== message.member.voiceChannelID) {
-                message.reply('I\'m not in the same channel !');
+                Utils.displayText(message, 'I\'m not in the same channel !');
             }
             else {
                 try {
                     message.member.voiceChannel.leave();
-                    message.reply('I left the channel');
+                    Utils.displayText(message, 'I left the channel');
                     this.inChannel = false;
                 } catch (e) {
-                    console.log("Leave : ERROR = " + e);
+                    console.log("ERROR = " + e);
                 }
             }
         }

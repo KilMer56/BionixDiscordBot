@@ -1,21 +1,24 @@
+
+// Get the utils functions
+const Utils = require('../utils/discordUtils.js');
+
+// Get the youtube downloader package
 const ytdl = require('ytdl-core');
 
 class YoutubeCommands {
     constructor(audioCommands) {
         this.audioCommands = audioCommands;
         this.state = {};
-        this.queue = new Map();
+        this.queue = [];
+        this.dispatcher = null;
     }
 
-    async runYoutubeVideo(message) {
-        console.log('runYoutubeVideo');
+    async add(message) {
         if (this.audioCommands.inChannel) {
-            const args = message.content.trim().split(' ').slice(1);
+            const args = Utils.getArgs(message);
 
-            if (args.length > 0 && this.audioCommands.connection != null) {
-                const url = args.shift();
-
-                console.log(url);
+            if (args.length > 1 && this.audioCommands.connection != null) {
+                const url = args[1];
 
                 const songInfo = await ytdl.getInfo(url);
                 const song = {
@@ -23,37 +26,73 @@ class YoutubeCommands {
                     url: songInfo.video_url,
                 };
 
-                console.log(song);
+                this.queue.push(song);
 
-                const dispatcher = this.audioCommands.connection.playStream(ytdl(song.url))
-                    .on('end', () => {
-                        console.log('Music ended!');
-                    })
-                    .on('error', error => {
-                        console.error(error);
-                    });
-
-                message.channel.send(`Now playing: ${song.tile}`);
+                if (!this.dispatcher) {
+                    this.play(message);
+                }
+                else {
+                    tils.displayText(message, `${song.title} added to the queue`);
+                }
             }
         }
         else {
-            message.channel.send(`Bot not in a channel !`);
+            Utils.displayText(message, `Bot not in a channel !`);
         }
+    }
 
-        // if()
-        // if (this.connection != null) {
-        //     const serverQueue = queue.get(message.guild.id);
-        // }
-        // const args = message.content.trim().split(' ').slice(1);
+    play(message) {
+        if (this.queue.length > 0) {
+            const song = this.queue.shift();
 
-        // if (args.length > 1 && this.connection != null) {
-        //     const url = args[1];
+            this.dispatcher = this.audioCommands.connection.playStream(ytdl(song.url, { filter: 'audioonly' }))
+                .on('end', () => {
+                    console.log('Music ended!');
+                    this.play(message);
+                })
+                .on('error', error => {
+                    console.error(error);
+                });
 
-        //     let infos = await ytdl.getInfo(url);
-        //     let dispatcher = await this.connection.play(ytdl(url, { filter: 'audioonly' }));
+            this.dispatcher.setVolume(0.5);
 
-        //     message.channel.send(`Now playing: ${infos.tile}`);
-        // }
+            Utils.displayText(message, `Now playing: ${song.title}`);
+        }
+        else {
+            this.dispatcher = null;
+        }
+    }
+
+    skip(message) {
+        if (this.dispatcher) {
+            Utils.displayText(message, `Music skipped`);
+            this.dispatcher.end();
+        }
+    }
+
+    stop(message) {
+        if (this.dispatcher) {
+            Utils.displayText(message, `Music stopped`);
+
+            this.queue = [];
+            this.dispatcher.end();
+        }
+    }
+
+    setVolume(message) {
+        if (this.dispatcher) {
+            const args = Utils.getArgs(message);
+            const volume = args.length == 2 ? parseFloat(args[1]) : null;
+
+            if (volume && volume > 0 && volume <= 1) {
+                this.dispatcher.setVolume(volume);
+
+                Utils.displayText(message, `Setting the volume  to ${volume}`);
+            }
+            else {
+                Utils.displayText(message, `The volume is not correct`);
+            }
+        }
     }
 
     print() {
