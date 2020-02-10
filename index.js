@@ -1,63 +1,53 @@
 const Discord = require('discord.js');
-const client = new Discord.Client();
+const fs = require('fs');
+const AudioCommands = require('./commands/AudioCommands.js')
 
 require('dotenv').config();
 const config = process.env;
+
+
+const client = new Discord.Client();
+let audioCommands = new AudioCommands();
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
 
 client.on('message', message => {
-    if (message.content === 'ping') {
-        message.reply('Pong!');
-    }
-    else {
-        // --- VOICE CHANNEL BLOC ---
-        if (!message.guild) return;
+    if (message.content.startsWith('/')) {
+        const command = message.content.split(' ').shift().substring(1);
+        console.log('Command : ' + command);
 
-        // Join the voice channel
-        if (message.content === '/join') {
-            joinVoiceChannel(message);
+        if (command === 'ping') {
+            message.reply('Pong!');
         }
+        else if (command === 'audio') {
+            // --- VOICE CHANNEL BLOC ---
+            if (!message.guild) {
+                message.reply("No channel guild available !");
+                return;
+            }
 
-        // Leave the voice channel
-        if (message.content === '/leave') {
-            leaveVoiceChannel(message);
+            const arg = message.content.trim().split(' ').slice(1);
+            if (arg.length <= 0) {
+                message.reply("You need to add a function behind !");
+                return;
+            }
+
+            switch (arg.shift()) {
+                case 'join':
+                    audioCommands.joinVoiceChannel(message);
+                    break;
+                case 'leave':
+                    audioCommands.leaveVoiceChannel(message);
+                    break;
+                case 'shutUpTo':
+                    audioCommands.shutUpUser(message);
+                    break;
+                default:
+            }
         }
     }
 });
-
-function joinVoiceChannel(message) {
-    if (message.member.voiceChannel) {
-        if (!message.member.voiceChannel.joinable) {
-            message.reply('I can\'t join the channel !');
-        }
-        else {
-            message.member.voiceChannel.join()
-                .then(connection => {
-                    message.reply('I have successfully connected to the channel!');
-                })
-                .catch(console.log);
-        }
-    } else {
-        message.reply('You need to join a voice channel first!');
-    }
-}
-
-function leaveVoiceChannel(message) {
-    if (message.member.voiceChannel) {
-        if (message.guild.me.voiceChannelID !== message.member.voiceChannelID) {
-            message.reply('I\'m not in the same channel !');
-        }
-        else {
-            message.member.voiceChannel.leave()
-                .then(connection => {
-                    message.reply('I left the channel');
-                })
-                .catch(console.log);
-        }
-    }
-}
 
 client.login(config.BOT_TOKEN);
