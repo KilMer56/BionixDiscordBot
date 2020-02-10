@@ -1,5 +1,7 @@
 // Get the utils functions
 const Utils = require('./utils/discordUtils.js');
+const ApiUtils = require('./utils/apiUtils.js');
+let apiUtils = new ApiUtils();
 
 // Get the packages
 const Discord = require('discord.js');
@@ -7,8 +9,8 @@ const fs = require('fs');
 const util = require('util');
 
 // Get the command's functions
-const AudioCommands = require('./commands/AudioCommands.js')
-const YoutubeCommands = require('./commands/YoutubeCommands.js')
+const AudioCommands = require('./commands/AudioCommands.js');
+const YoutubeCommands = require('./commands/YoutubeCommands.js');
 
 // Get the configuration
 require('dotenv').config();
@@ -18,8 +20,9 @@ const config = process.env;
 const log_file = fs.createWriteStream(__dirname + '/logs/debug.log', { flags: 'w' });
 const log_stdout = process.stdout;
 const client = new Discord.Client();
+
 let audioCommands = new AudioCommands();
-let youtubeCommands = new YoutubeCommands(audioCommands);
+let youtubeCommands = new YoutubeCommands(audioCommands, apiUtils);
 
 // Override of the lof function to put the logs into a file
 console.log = function (d) {
@@ -95,6 +98,12 @@ client.on('message', message => {
                             break;
                         case 'volume':
                             youtubeCommands.setVolume(message);
+                            break;
+                        case 'search':
+                            youtubeCommands.searchVideo(message, apiUtils);
+                            break;
+                        case 'select':
+                            youtubeCommands.select(message);
                             break;
                         default:
                     }

@@ -6,10 +6,12 @@ const Utils = require('../utils/discordUtils.js');
 const ytdl = require('ytdl-core');
 
 class YoutubeCommands {
-    constructor(audioCommands) {
+    constructor(audioCommands, apiUtils) {
         this.audioCommands = audioCommands;
+        this.apiUtils = apiUtils;
         this.state = {};
         this.queue = [];
+        this.choices = {};
         this.dispatcher = null;
     }
 
@@ -19,6 +21,11 @@ class YoutubeCommands {
 
             if (args.length > 1 && this.audioCommands.connection != null) {
                 const url = args[1];
+
+                if (!await ytdl.validateURL(url)) {
+                    Utils.displayText(message, `The url isn't correct`);
+                    return;
+                }
 
                 const songInfo = await ytdl.getInfo(url);
                 const song = {
@@ -91,6 +98,47 @@ class YoutubeCommands {
             }
             else {
                 Utils.displayText(message, `The volume is not correct`);
+            }
+        }
+    }
+
+    searchVideo(message) {
+        if (this.audioCommands.inChannel) {
+            const title = message.content.match(/'([^']+)'/)[1];
+
+            if (title && title.length > 3) {
+                this.apiUtils.getVideosFromTitle(message, title);
+            }
+            else {
+                Utils.displayText(message, `The title is not correct`);
+            }
+        }
+    }
+
+    async select(message) {
+        if (this.audioCommands.inChannel) {
+            const args = Utils.getArgs(message);
+            const key = args.length == 2 ? args[1] : null;
+
+            if (key) {
+                const video = this.apiUtils.result[key];
+                const songInfo = await ytdl.getInfo(video.videoId);
+                const song = {
+                    title: songInfo.title,
+                    url: songInfo.video_url,
+                };
+
+                this.queue.push(song);
+
+                if (!this.dispatcher) {
+                    this.play(message);
+                }
+                else {
+                    tils.displayText(message, `${song.title} added to the queue`);
+                }
+            }
+            else {
+                Utils.displayText(message, `The title is not correct`);
             }
         }
     }
