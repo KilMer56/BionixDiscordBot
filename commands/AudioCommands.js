@@ -2,10 +2,7 @@ class AudioCommands {
     constructor() {
         this.state = {};
         this.inChannel = false;
-    }
-
-    getState() {
-        return this.state
+        this.connection = null;
     }
 
     shutUpUser(message) {
@@ -34,28 +31,34 @@ class AudioCommands {
         return false;
     }
 
-    joinVoiceChannel(message) {
+    async joinVoiceChannel(message) {
         if (message.member.voiceChannel) {
             if (!message.member.voiceChannel.joinable) {
                 message.reply('I can\'t join the channel !');
             }
             else {
-                message.member.voiceChannel.join()
-                    .then(connection => {
-                        this.inChannel = true;
-                        message.reply('I have successfully connected to the channel!');
+                this.connection = await message.member.voiceChannel.join();
+                this.inChannel = true;
 
-                        connection.on('error', console.error);
+                message.reply('I have successfully connected to the channel!');
+                // message.member.voiceChannel.join()
+                //     .then(connection => {
+                //         this.connection = connection;
+                //         this.inChannel = true;
 
-                        connection.on('speaking', (user, speaking) => {
+                //         message.reply('I have successfully connected to the channel!');
 
-                            if (speaking
-                                && this.state['shutUp'] != null
-                                && this.state['shutUp'] == user.username) {
-                                console.log("LISTENING TO YOU !");
-                            }
-                        });
-                    });
+                //         connection.on('error', console.error);
+
+                //         connection.on('speaking', (user, speaking) => {
+
+                //             if (speaking
+                //                 && this.state['shutUp'] != null
+                //                 && this.state['shutUp'] == user.username) {
+                //                 console.log("LISTENING TO YOU !");
+                //             }
+                //         });
+                //     });
             }
         }
         else {
