@@ -1,7 +1,7 @@
 // Get the utils functions
 const Utils = require('./utils/discordUtils.js');
-const ApiUtils = require('./utils/apiUtils.js');
-let apiUtils = new ApiUtils();
+const YoutubeApi = require('./utils/youtubeApi.js');
+let youtubeApi = new YoutubeApi();
 
 // Get the packages
 const Discord = require('discord.js');
@@ -24,7 +24,7 @@ const log_stdout = process.stdout;
 const client = new Discord.Client();
 
 let audioCommands = new AudioCommands();
-let youtubeCommands = new YoutubeCommands(audioCommands, apiUtils);
+let youtubeCommands = new YoutubeCommands(audioCommands, youtubeApi);
 
 // Override of the lof function to put the logs into a file
 console.log = function (d) {
@@ -112,6 +112,12 @@ client.on('message', message => {
                             break;
                         case 'resume':
                             youtubeCommands.resume(message);
+                            break;
+                        case 'getPlaylist':
+                            youtubeCommands.getPlaylist(message);
+                            break;
+                        case 'loadPlaylist':
+                            youtubeCommands.loadPlaylist(message);
                             break;
                         default:
                     }

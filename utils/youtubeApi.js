@@ -5,7 +5,10 @@ const Utils = require('./discordUtils.js');
 
 const OAuth2 = google.auth.OAuth2;
 
-class ApiUtils {
+/**
+ * Youtube Api called to gets youtube informations
+ */
+class YoutubeApi {
     constructor() {
         this.SCOPES = ['https://www.googleapis.com/auth/youtube.readonly'];
         this.TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/';
@@ -129,6 +132,7 @@ class ApiUtils {
                         let newResults = {};
                         let textMessage = 'Select the video or ask for a different title!\n\n';
 
+                        // stores the items into an object
                         for (let key in videos) {
                             let title = videos[key].snippet.title;
 
@@ -148,6 +152,65 @@ class ApiUtils {
             });
         });
     }
+
+    /**
+     * Look for a list of 10 videos from a playlist
+     * @param {String} playlistId 
+     */
+    async getVideosFromPlaylist(message, playlistId) {
+        // Load client secrets from a local file.
+        await fs.readFile('./client_secret.json', (err, content) => {
+            if (err) {
+                console.log('Error loading client secret file: ' + err);
+                return;
+            }
+            // Authorize a client with the loaded credentials, then call the YouTube API.
+            this.authorize(JSON.parse(content), (auth) => {
+                var service = google.youtube('v3');
+
+                // gets the list
+                service.playlistItems.list({
+                    auth: auth,
+                    part: 'snippet',
+                    maxResults: 10,
+                    playlistId: playlistId
+                }, (err, response) => {
+                    if (err) {
+                        console.log('The API returned an error: ' + err);
+                        return;
+                    }
+                    let items = response.data.items;
+
+                    if (items.length == 0) {
+                        console.log('No video found.');
+                    } else {
+                        console.log("FOUND " + items.length + " items !");
+
+                        let newResults = [];
+                        let textMessage = 'List following list of songs has been added!\n\n';
+
+                        // stores the items into an array
+                        for (let item of items) {
+                            if (item.snippet.resourceId && item.snippet.resourceId.kind == "youtube#video") {
+                                let title = item.snippet.title;
+
+                                newResults.push({
+                                    videoId: item.snippet.resourceId.videoId,
+                                    title: item.snippet.title
+                                });
+
+                                textMessage += ` - ${title}\n`;
+                            }
+                        }
+
+                        this.result = newResults;
+
+                        Utils.displayText(message, textMessage);
+                    }
+                });
+            });
+        });
+    }
 }
 
-module.exports = ApiUtils
+module.exports = YoutubeApi
