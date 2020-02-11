@@ -9,10 +9,11 @@ class YoutubeCommands {
     constructor(audioCommands, apiUtils) {
         this.audioCommands = audioCommands;
         this.apiUtils = apiUtils;
-        this.state = {};
+        this.volume = 0.3;
         this.queue = [];
         this.choices = {};
         this.dispatcher = null;
+        this.stream = null;
     }
 
     async add(message) {
@@ -39,7 +40,7 @@ class YoutubeCommands {
                     this.play(message);
                 }
                 else {
-                    tils.displayText(message, `${song.title} added to the queue`);
+                    Utils.displayText(message, `${song.title} added to the queue`);
                 }
             }
         }
@@ -52,7 +53,11 @@ class YoutubeCommands {
         if (this.queue.length > 0) {
             const song = this.queue.shift();
 
-            this.dispatcher = this.audioCommands.connection.playStream(ytdl(song.url, { filter: 'audioonly' }))
+            this.dispatcher = this.audioCommands.connection.playStream(
+                ytdl(song.url, {
+                    filter: 'audioonly',
+                    quality: 'highestaudio'
+                }))
                 .on('end', () => {
                     console.log('Music ended!');
                     this.play(message);
@@ -61,7 +66,7 @@ class YoutubeCommands {
                     console.error(error);
                 });
 
-            this.dispatcher.setVolume(0.5);
+            this.dispatcher.setVolume(this.volume);
 
             Utils.displayText(message, `Now playing: ${song.title}`);
         }
@@ -92,6 +97,7 @@ class YoutubeCommands {
             const volume = args.length == 2 ? parseFloat(args[1]) : null;
 
             if (volume && volume > 0 && volume <= 1) {
+                this.volume = volume;
                 this.dispatcher.setVolume(volume);
 
                 Utils.displayText(message, `Setting the volume  to ${volume}`);
@@ -143,8 +149,18 @@ class YoutubeCommands {
         }
     }
 
-    print() {
-        //console.log("Audio Commands : \n inChannel : " + this.inChannel + "\n state : " + this.state);
+    pause(message) {
+        if (this.dispatcher) {
+            this.dispatcher.setVolume(0);
+            Utils.displayText(message, `Music paused`);
+        }
+    }
+
+    resume(message) {
+        if (this.dispatcher) {
+            this.dispatcher.setVolume(this.volume);
+            Utils.displayText(message, `Music resumed`);
+        }
     }
 }
 

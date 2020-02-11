@@ -102,10 +102,16 @@ client.on('message', message => {
                             youtubeCommands.setVolume(message);
                             break;
                         case 'search':
-                            youtubeCommands.searchVideo(message, apiUtils);
+                            youtubeCommands.searchVideo(message);
                             break;
                         case 'select':
                             youtubeCommands.select(message);
+                            break;
+                        case 'pause':
+                            youtubeCommands.pause(message);
+                            break;
+                        case 'resume':
+                            youtubeCommands.resume(message);
                             break;
                         default:
                     }

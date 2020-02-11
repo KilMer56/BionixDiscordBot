@@ -67,10 +67,6 @@ class AudioCommands {
             }
         }
     }
-
-    print() {
-        console.log("Audio Commands : \n inChannel : " + this.inChannel + "\n state : " + this.state);
-    }
 }
 
 module.exports = AudioCommands
