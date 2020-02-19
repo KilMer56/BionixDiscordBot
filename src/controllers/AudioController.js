@@ -1,7 +1,7 @@
 // Get the utils functions
 const Utils = require('../utils/discordUtils.js');
 
-class AudioCommands {
+class AudioController {
     constructor() {
         this.state = {};
         this.inChannel = false;
@@ -69,4 +69,4 @@ class AudioCommands {
     }
 }
 
-module.exports = AudioCommands
+module.exports = AudioController

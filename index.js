@@ -1,6 +1,7 @@
 // Get the utils functions
-const Utils = require('./utils/discordUtils.js');
-const YoutubeApi = require('./utils/youtubeApi.js');
+const Utils = require('./src/utils/discordUtils.js');
+const YoutubeApi = require('./src/utils/youtubeApi.js');
+
 let youtubeApi = new YoutubeApi();
 
 // Get the packages
@@ -9,8 +10,9 @@ const fs = require('fs');
 const util = require('util');
 
 // Get the command's functions
-const AudioCommands = require('./commands/AudioCommands.js');
-const YoutubeCommands = require('./commands/YoutubeCommands.js');
+const AudioController = require('./src/controllers/AudioController.js');
+const YoutubeController = require('./src/controllers/YoutubeController.js');
+const BattleshipController = require('./src/controllers/BattleshipController.js');
 
 // Get the configuration
 require('dotenv').config();
@@ -23,8 +25,9 @@ const log_file = fs.createWriteStream(__dirname + '/logs/debug-' + time + '.log'
 const log_stdout = process.stdout;
 const client = new Discord.Client();
 
-let audioCommands = new AudioCommands();
-let youtubeCommands = new YoutubeCommands(audioCommands, youtubeApi);
+let audioController = new AudioController();
+let youtubeController = new YoutubeController(audioController, youtubeApi);
+let battleshipController = new BattleshipController();
 
 // Override of the lof function to put the logs into a file
 console.log = function (d) {
@@ -62,13 +65,13 @@ client.on('message', message => {
             try {
                 switch (args[0]) {
                     case 'join':
-                        audioCommands.joinVoiceChannel(message);
+                        audioController.joinVoiceChannel(message);
                         break;
                     case 'leave':
-                        audioCommands.leaveVoiceChannel(message);
+                        audioController.leaveVoiceChannel(message);
                         break;
                     case 'shutUpTo':
-                        audioCommands.shutUpUser(message);
+                        audioController.shutUpUser(message);
                         break;
                     default:
                 }
@@ -77,12 +80,48 @@ client.on('message', message => {
                 console.log(e);
             }
         }
+        else if (command === 'boat') { // --- BATTLESHIP BLOC ---
+            switch (args[0]) {
+                case 'start':
+                    battleshipController.startGame();
+                    battleshipController.generateRandomBoard();
+                    Utils.displayText(message, "THE BATTLE BEGINS\nYour board:\n" + battleshipController.displayBoard(true));
+                    break;
+                case 'placeBoat':
+                    const myArgs = Utils.getArgs(message);
+
+                    if (myArgs.length === 5) {
+                        const type = myArgs[1];
+                        const index = myArgs[2];
+                        const char = myArgs[3];
+                        const isRow = myArgs[4];
+                        battleshipController.addBoat(type, index, char, isRow, true);
+                        Utils.displayText(message, "Boat added !\n" + battleshipController.displayBoard(true));
+                    }
+
+                    break;
+                case 'hit':
+                    const myMyArgs = Utils.getArgs(message);
+
+                    if (myMyArgs.length === 3) {
+                        const index = myMyArgs[1];
+                        const char = myMyArgs[2];
+                        battleshipController.hit(index, char, true);
+                        battleshipController.newHitBot();
+                        Utils.displayText(message, "BOT :\n" + battleshipController.displayBoard(false));
+                        Utils.displayText(message, "MOI :\n" + battleshipController.displayBoard(true));
+                    }
+
+                    break;
+                default:
+            }
+        }
         else if (command === 'ytb') { // --- YOUTUBE BLOC ---
             if (!message.guild) {
                 Utils.displayText(message, "No channel guild available !");
                 return;
             }
-            else if (!youtubeCommands.audioCommands.connection) {
+            else if (!youtubeController.audioController.connection) {
                 Utils.displayText(message, "No current connection");
                 return;
             }
@@ -90,34 +129,34 @@ client.on('message', message => {
                 try {
                     switch (args[0]) {
                         case 'play':
-                            youtubeCommands.add(message);
+                            youtubeController.add(message);
                             break;
                         case 'skip':
-                            youtubeCommands.skip(message);
+                            youtubeController.skip(message);
                             break;
                         case 'stop':
-                            youtubeCommands.stop(message);
+                            youtubeController.stop(message);
                             break;
                         case 'volume':
-                            youtubeCommands.setVolume(message);
+                            youtubeController.setVolume(message);
                             break;
                         case 'search':
-                            youtubeCommands.searchVideo(message);
+                            youtubeController.searchVideo(message);
                             break;
                         case 'select':
-                            youtubeCommands.select(message);
+                            youtubeController.select(message);
                             break;
                         case 'pause':
-                            youtubeCommands.pause(message);
+                            youtubeController.pause(message);
                             break;
                         case 'resume':
-                            youtubeCommands.resume(message);
+                            youtubeController.resume(message);
                             break;
                         case 'getPlaylist':
-                            youtubeCommands.getPlaylist(message);
+                            youtubeController.getPlaylist(message);
                             break;
                         case 'loadPlaylist':
-                            youtubeCommands.loadPlaylist(message);
+                            youtubeController.loadPlaylist(message);
                             break;
                         default:
                     }

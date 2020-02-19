@@ -8,9 +8,9 @@ const ytdl = require('ytdl-core');
 /**
  * Youtube class that handles all the different commands
  */
-class YoutubeCommands {
-    constructor(audioCommands, youtubeApi) {
-        this.audioCommands = audioCommands;
+class YoutubeController {
+    constructor(audioController, youtubeApi) {
+        this.audioController = audioController;
         this.youtubeApi = youtubeApi;
         this.volume = 0.3;
         this.queue = [];
@@ -24,10 +24,10 @@ class YoutubeCommands {
      * @param {Message} message 
      */
     async add(message) {
-        if (this.audioCommands.inChannel) {
+        if (this.audioController.inChannel) {
             const args = Utils.getArgs(message);
 
-            if (args.length > 1 && this.audioCommands.connection != null) {
+            if (args.length > 1 && this.audioController.connection != null) {
                 const url = args[1];
 
                 // check if the url is valid 
@@ -68,7 +68,7 @@ class YoutubeCommands {
             const song = this.queue.shift();
 
             // start the song
-            this.dispatcher = this.audioCommands.connection.playStream(
+            this.dispatcher = this.audioController.connection.playStream(
                 ytdl(song.url, {
                     filter: 'audioonly',
                     quality: 'highestaudio'
@@ -165,7 +165,7 @@ class YoutubeCommands {
      * @param {Message} message 
      */
     searchVideo(message) {
-        if (this.audioCommands.inChannel) {
+        if (this.audioController.inChannel) {
             const title = message.content.match(/'([^']+)'/)[1];
 
             if (title && title.length > 3) {
@@ -182,7 +182,7 @@ class YoutubeCommands {
      * @param {Message} message 
      */
     getPlaylist(message) {
-        if (this.audioCommands.inChannel) {
+        if (this.audioController.inChannel) {
             const playlistId = message.content.match(/'([^']+)'/)[1];
 
             if (playlistId && playlistId.length > 3) {
@@ -199,7 +199,7 @@ class YoutubeCommands {
      * @param {Message} message 
      */
     async loadPlaylist(message) {
-        if (this.audioCommands.inChannel) {
+        if (this.audioController.inChannel) {
             const results = this.youtubeApi.result;
 
             if (results && results.length > 0) {
@@ -231,7 +231,7 @@ class YoutubeCommands {
      * @param {Message} message 
      */
     async select(message) {
-        if (this.audioCommands.inChannel) {
+        if (this.audioController.inChannel) {
             const args = Utils.getArgs(message);
             const key = args.length == 2 ? args[1] : null;
 
@@ -262,4 +262,4 @@ class YoutubeCommands {
     }
 }
 
-module.exports = YoutubeCommands
+module.exports = YoutubeController
