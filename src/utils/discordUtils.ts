@@ -1,27 +1,30 @@
 
+import * as Discord from "discord.js";
+
 /**
  * List of frequently used methods
  */
-module.exports = {
+export default class DiscordUtils {
+
     /**
      * Gets the arguments of the current message
      */
-    getArgs: (message) => {
+    static getArgs(message: Discord.Message): string[] {
         return message.content.trim().split(' ').slice(1);
-    },
+    }
 
     /**
      * Displays a text and logs it
      */
-    displayText: (message, text) => {
+    static displayText(message: Discord.Message, text: string) {
         console.log(text);
         message.channel.send(text);
-    },
+    }
 
     /**
      * Replies to the user
      */
-    reply: (message, text) => {
+    static reply(message: Discord.Message, text: string) {
         console.log(text);
         message.reply(text);
     }

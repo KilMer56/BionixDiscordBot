@@ -1,39 +1,37 @@
 // Get the utils functions
-const Utils = require('./src/utils/discordUtils.js');
-const YoutubeApi = require('./src/utils/youtubeApi.js');
+import DiscordUtils from './src/utils/discordUtils';
+import { YoutubeApi } from './src/utils/youtubeApi.js';
 
 let youtubeApi = new YoutubeApi();
 
 // Get the packages
-const Discord = require('discord.js');
-const fs = require('fs');
-const util = require('util');
+import * as Discord from 'discord.js';
+import * as fs from 'fs';
+import * as util from 'util';
 
 // Get the command's functions
-const AudioController = require('./src/controllers/AudioController.js');
-const YoutubeController = require('./src/controllers/YoutubeController.js');
-const BattleshipController = require('./src/controllers/BattleshipController.js');
+import { AudioController } from './src/controllers/AudioController.js';
+import { YoutubeController } from './src/controllers/YoutubeController.js';
+import { BattleshipController } from './src/controllers/BattleshipController.js';
 
 // Get the configuration
 require('dotenv').config();
 const config = process.env;
 
-const time = Date.now();
-
 // Prepare the log file
-const log_file = fs.createWriteStream(__dirname + '/logs/debug-' + time + '.log', { flags: 'w' });
+const log_file: fs.WriteStream = fs.createWriteStream(__dirname + '/logs/debug-' + Date.now() + '.log', { flags: 'w' });
 const log_stdout = process.stdout;
-const client = new Discord.Client();
+const client: Discord.Client = new Discord.Client();
 
-let audioController = new AudioController();
-let youtubeController = new YoutubeController(audioController, youtubeApi);
-let battleshipController = new BattleshipController();
+let audioController: AudioController = new AudioController();
+let youtubeController: YoutubeController = new YoutubeController(audioController, youtubeApi);
+let battleshipController: BattleshipController = new BattleshipController();
 
 // Override of the lof function to put the logs into a file
 console.log = function (d) {
-    let text = 'Log : ' + util.format(d) + '\n';
+    let text = '[*] ' + util.format(d) + '\n';
 
-    log_file.write(text);
+    //log_file.write(text);
     log_stdout.write(text);
 };
 
@@ -46,19 +44,19 @@ client.on('message', message => {
     if (message.content.startsWith('/')) {
         console.log('Command | ' + message.content);
 
-        const command = message.content.split(' ').shift().substring(1);
-        const args = Utils.getArgs(message);
+        const command: string = message.content.split(' ').shift().substring(1);
+        const args: string[] = DiscordUtils.getArgs(message);
 
         if (command === 'ping') {
-            Utils.reply('Pong!');
+            DiscordUtils.reply(message, 'Pong!');
         }
         else if (command === 'audio') { // --- VOICE CHANNEL BLOC ---
             if (!message.guild) {
-                Utils.displayText(message, "No channel guild available !");
+                DiscordUtils.displayText(message, "No channel guild available !");
                 return;
             }
             if (args.length <= 0) {
-                Utils.displayText(message, "You need to add a function behind !");
+                DiscordUtils.displayText(message, "You need to add a function behind !");
                 return;
             }
 
@@ -70,9 +68,6 @@ client.on('message', message => {
                     case 'leave':
                         audioController.leaveVoiceChannel(message);
                         break;
-                    case 'shutUpTo':
-                        audioController.shutUpUser(message);
-                        break;
                     default:
                 }
             }
@@ -83,33 +78,33 @@ client.on('message', message => {
         else if (command === 'boat') { // --- BATTLESHIP BLOC ---
             switch (args[0]) {
                 case 'start':
-                    battleshipController.startGame();
-                    battleshipController.generateRandomBoard();
-                    Utils.displayText(message, "THE BATTLE BEGINS\nYour board:\n" + battleshipController.displayBoard(true));
+                    battleshipController.startGame(message);
+                    DiscordUtils.displayText(message, "THE BATTLE BEGINS\nYour board:\n" + battleshipController.displayBoard(true));
                     break;
                 case 'placeBoat':
-                    const myArgs = Utils.getArgs(message);
+                    const myArgs: string[] = DiscordUtils.getArgs(message);
 
                     if (myArgs.length === 5) {
-                        const type = myArgs[1];
-                        const index = myArgs[2];
+                        const type = parseInt(myArgs[1]);
+                        const index = parseInt(myArgs[2]);
                         const char = myArgs[3];
-                        const isRow = myArgs[4];
+                        const isRow = (myArgs[4] == 'true');
+
                         battleshipController.addBoat(type, index, char, isRow, true);
-                        Utils.displayText(message, "Boat added !\n" + battleshipController.displayBoard(true));
+                        DiscordUtils.displayText(message, "Boat added !\n" + battleshipController.displayBoard(true));
                     }
 
                     break;
                 case 'hit':
-                    const myMyArgs = Utils.getArgs(message);
+                    const myMyArgs = DiscordUtils.getArgs(message);
 
                     if (myMyArgs.length === 3) {
-                        const index = myMyArgs[1];
+                        const index = parseInt(myMyArgs[1]);
                         const char = myMyArgs[2];
                         battleshipController.hit(index, char, true);
                         battleshipController.newHitBot();
-                        Utils.displayText(message, "BOT :\n" + battleshipController.displayBoard(false));
-                        Utils.displayText(message, "MOI :\n" + battleshipController.displayBoard(true));
+                        DiscordUtils.displayText(message, "BOT :\n" + battleshipController.displayBoard(false));
+                        DiscordUtils.displayText(message, "MOI :\n" + battleshipController.displayBoard(true));
                     }
 
                     break;
@@ -118,11 +113,11 @@ client.on('message', message => {
         }
         else if (command === 'ytb') { // --- YOUTUBE BLOC ---
             if (!message.guild) {
-                Utils.displayText(message, "No channel guild available !");
+                DiscordUtils.displayText(message, "No channel guild available !");
                 return;
             }
             else if (!youtubeController.audioController.connection) {
-                Utils.displayText(message, "No current connection");
+                DiscordUtils.displayText(message, "No current connection");
                 return;
             }
             else {

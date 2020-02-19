@@ -1,3 +1,7 @@
+import { AudioController } from "./AudioController";
+import { YoutubeApi } from "../utils/youtubeApi";
+import DiscordUtils from '../utils/discordUtils';
+import * as Discord from "discord.js";
 
 // Get the utils functions
 const Utils = require('../utils/discordUtils.js');
@@ -8,8 +12,16 @@ const ytdl = require('ytdl-core');
 /**
  * Youtube class that handles all the different commands
  */
-class YoutubeController {
-    constructor(audioController, youtubeApi) {
+export class YoutubeController {
+    audioController: AudioController;
+    youtubeApi: YoutubeApi
+    volume: number;
+    queue: Object[];
+    choices: Object;
+    dispatcher: any;
+    stream: any;
+
+    constructor(audioController: AudioController, youtubeApi: YoutubeApi) {
         this.audioController = audioController;
         this.youtubeApi = youtubeApi;
         this.volume = 0.3;
@@ -23,16 +35,16 @@ class YoutubeController {
      * Add a youtube video from an url
      * @param {Message} message 
      */
-    async add(message) {
+    async add(message: Discord.Message) {
         if (this.audioController.inChannel) {
-            const args = Utils.getArgs(message);
+            const args = DiscordUtils.getArgs(message);
 
             if (args.length > 1 && this.audioController.connection != null) {
                 const url = args[1];
 
                 // check if the url is valid 
                 if (!await ytdl.validateURL(url)) {
-                    Utils.displayText(message, `The url isn't correct`);
+                    DiscordUtils.displayText(message, `The url isn't correct`);
                     return;
                 }
 
@@ -50,12 +62,12 @@ class YoutubeController {
                     this.play(message);
                 }
                 else {
-                    Utils.displayText(message, `${song.title} added to the queue`);
+                    DiscordUtils.displayText(message, `${song.title} added to the queue`);
                 }
             }
         }
         else {
-            Utils.displayText(message, `Bot not in a channel !`);
+            DiscordUtils.displayText(message, `Bot not in a channel !`);
         }
     }
 
@@ -63,9 +75,9 @@ class YoutubeController {
      * Play method that load the queue and start the next song
      * @param {Message} message 
      */
-    play(message) {
+    play(message: Discord.Message) {
         if (this.queue.length > 0) {
-            const song = this.queue.shift();
+            const song: any = this.queue.shift();
 
             // start the song
             this.dispatcher = this.audioController.connection.playStream(
@@ -77,14 +89,14 @@ class YoutubeController {
                     console.log('Music ended!');
                     this.play(message);
                 })
-                .on('error', error => {
+                .on('error', (error: any) => {
                     console.error(error);
                 });
 
             // adjust the volume
             this.dispatcher.setVolume(this.volume);
 
-            Utils.displayText(message, `Now playing: ${song.title}`);
+            DiscordUtils.displayText(message, `Now playing: ${song.title}`);
         }
         else {
             this.dispatcher = null;
@@ -95,9 +107,9 @@ class YoutubeController {
      * Skip the current song
      * @param {Message} message 
      */
-    skip(message) {
+    skip(message: Discord.Message) {
         if (this.dispatcher) {
-            Utils.displayText(message, `Music skipped`);
+            DiscordUtils.displayText(message, `Music skipped`);
             this.dispatcher.end();
         }
     }
@@ -106,9 +118,9 @@ class YoutubeController {
      * Clean the queue and stop the dispatcher
      * @param {Message} message 
      */
-    stop(message) {
+    stop(message: Discord.Message) {
         if (this.dispatcher) {
-            Utils.displayText(message, `Music stopped`);
+            DiscordUtils.displayText(message, `Music stopped`);
 
             this.queue = [];
             this.dispatcher.end();
@@ -119,10 +131,10 @@ class YoutubeController {
      * Put on 'pause' by reducing the volume to 0
      * @param {Message} message 
      */
-    pause(message) {
+    pause(message: Discord.Message) {
         if (this.dispatcher) {
             this.dispatcher.setVolume(0);
-            Utils.displayText(message, `Music paused`);
+            DiscordUtils.displayText(message, `Music paused`);
         }
     }
 
@@ -130,10 +142,10 @@ class YoutubeController {
      * Resume the song by putting the volume to it's original value 
      * @param {Message} message 
      */
-    resume(message) {
+    resume(message: Discord.Message) {
         if (this.dispatcher) {
             this.dispatcher.setVolume(this.volume);
-            Utils.displayText(message, `Music resumed`);
+            DiscordUtils.displayText(message, `Music resumed`);
         }
     }
 
@@ -141,10 +153,10 @@ class YoutubeController {
      * Sets the volume of the song and stores it
      * @param {Message} message 
      */
-    setVolume(message) {
+    setVolume(message: Discord.Message) {
         if (this.dispatcher) {
             // get the volume value
-            const args = Utils.getArgs(message);
+            const args = DiscordUtils.getArgs(message);
             const volume = args.length == 2 ? parseFloat(args[1]) : null;
 
             // check if it's between 0 and 1
@@ -152,10 +164,10 @@ class YoutubeController {
                 this.volume = volume;
                 this.dispatcher.setVolume(volume);
 
-                Utils.displayText(message, `Setting the volume  to ${volume}`);
+                DiscordUtils.displayText(message, `Setting the volume  to ${volume}`);
             }
             else {
-                Utils.displayText(message, `The volume is not correct`);
+                DiscordUtils.displayText(message, `The volume is not correct`);
             }
         }
     }
@@ -164,7 +176,7 @@ class YoutubeController {
      * Calls the Youtube Api to find a video from a title
      * @param {Message} message 
      */
-    searchVideo(message) {
+    searchVideo(message: Discord.Message) {
         if (this.audioController.inChannel) {
             const title = message.content.match(/'([^']+)'/)[1];
 
@@ -172,7 +184,7 @@ class YoutubeController {
                 this.youtubeApi.getVideosFromTitle(message, title);
             }
             else {
-                Utils.displayText(message, `The title is not correct`);
+                DiscordUtils.displayText(message, `The title is not correct`);
             }
         }
     }
@@ -181,7 +193,7 @@ class YoutubeController {
      * Gets a list of song from a playlist id by calling the Youtube Api 
      * @param {Message} message 
      */
-    getPlaylist(message) {
+    getPlaylist(message: Discord.Message) {
         if (this.audioController.inChannel) {
             const playlistId = message.content.match(/'([^']+)'/)[1];
 
@@ -189,7 +201,7 @@ class YoutubeController {
                 this.youtubeApi.getVideosFromPlaylist(message, playlistId);
             }
             else {
-                Utils.displayText(message, `The playlistId is not correct`);
+                DiscordUtils.displayText(message, `The playlistId is not correct`);
             }
         }
     }
@@ -198,7 +210,7 @@ class YoutubeController {
      * Loads the playlist by findind the urls and putting the informations into the queue
      * @param {Message} message 
      */
-    async loadPlaylist(message) {
+    async loadPlaylist(message: Discord.Message) {
         if (this.audioController.inChannel) {
             const results = this.youtubeApi.result;
 
@@ -214,13 +226,13 @@ class YoutubeController {
                     this.queue.push(song);
                 }
 
-                Utils.displayText(message, `Playlist added to the queue`);
+                DiscordUtils.displayText(message, `Playlist added to the queue`);
 
                 // if nothing is currently played, starts a new song
                 if (!this.dispatcher) this.play(message);
             }
             else {
-                Utils.displayText(message, `No playlist loaded`);
+                DiscordUtils.displayText(message, `No playlist loaded`);
             }
         }
     }
@@ -230,9 +242,9 @@ class YoutubeController {
      * Then finds the url and adds the video to queue
      * @param {Message} message 
      */
-    async select(message) {
+    async select(message: Discord.Message) {
         if (this.audioController.inChannel) {
-            const args = Utils.getArgs(message);
+            const args = DiscordUtils.getArgs(message);
             const key = args.length == 2 ? args[1] : null;
 
             if (key) {
@@ -252,11 +264,11 @@ class YoutubeController {
                     this.play(message);
                 }
                 else {
-                    tils.displayText(message, `${song.title} added to the queue`);
+                    DiscordUtils.displayText(message, `${song.title} added to the queue`);
                 }
             }
             else {
-                Utils.displayText(message, `The title is not correct`);
+                DiscordUtils.displayText(message, `The title is not correct`);
             }
         }
     }

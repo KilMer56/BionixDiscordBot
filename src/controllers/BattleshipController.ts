@@ -1,5 +1,7 @@
 // Get the utils functions
-const Utils = require('../utils/discordUtils.js');
+import DiscordUtils from '../utils/discordUtils';
+import * as Discord from "discord.js";
+
 const CONSTANTS = {
     DIMENSION: 8,
     CHAR_WATER: '🔵',
@@ -11,34 +13,29 @@ const CONSTANTS = {
     CHAR_EMOJIS: ['🅰️', '']
 }
 
-class BattleshipController {
+export class BattleshipController {
+    board: any[];
+    playerBoard: string[][];
+    isPlaying: Boolean;
+    user: Object;
+    currentFocus: string[][];
+
     constructor() {
-        this.board = null;
-        this.playerBoard = null;
         this.isPlaying = false;
-        this.user = null;
-        this.currentFocus = null;
     }
 
-    startGame(message) {
+    startGame(message: Discord.Message) {
         if (!this.isPlaying) {
-            //this.user = message.member;
             this.board = this.buildBoard();
             this.playerBoard = this.buildBoard();
-            //this.generateRandomBoard();
-            // this.addBoat(1, 2, 'B', true, true);
-            // this.displayBoard(true);
-            // this.hit(2, 'D', false);
-            // this.newHitBot();
-            // this.newHitBot();
-            // this.newHitBot();
-            // this.newHitBot();
-            // this.displayBoard(true);
+            this.generateRandomBoard();
             this.isPlaying = true;
+
+            DiscordUtils.displayText(message, `THE GAME BEGINS ! \nYour Board :\n${this.displayBoard(true)}`)
         }
     }
 
-    buildBoard() {
+    buildBoard(): string[][] {
         let board = [];
 
         for (let i = 0; i < CONSTANTS.DIMENSION; i++) {
@@ -59,8 +56,8 @@ class BattleshipController {
             let boatPlaced = false;
 
             do {
-                let index = parseInt(Math.random() * CONSTANTS.DIMENSION);
-                let charIndex = parseInt(Math.random() * CONSTANTS.DIMENSION);
+                let index = Math.round(Math.random() * CONSTANTS.DIMENSION);
+                let charIndex = Math.round(Math.random() * CONSTANTS.DIMENSION);
                 let char = CONSTANTS.CHARACTERS[charIndex];
                 let isRow = (Math.random() > 0.5);
 
@@ -69,7 +66,7 @@ class BattleshipController {
         }
     }
 
-    addBoat(type, index, char, isRow, isPlayer) {
+    addBoat(type: number, index: number, char: string, isRow: Boolean, isPlayer: Boolean) {
         if (type - 1 < CONSTANTS.BOAT_SIZES.length) {
             console.log(char)
             let y = index - 1;
@@ -78,12 +75,10 @@ class BattleshipController {
             console.log(x + ' : ' + y)
 
             if (x >= 0 && x < CONSTANTS.DIMENSION && y >= 0 && y < CONSTANTS.DIMENSION) {
-                console.log('oui')
                 let currBoard = isPlayer ? JSON.parse(JSON.stringify(this.playerBoard)) : JSON.parse(JSON.stringify(this.board));
                 let size = CONSTANTS.BOAT_SIZES[type - 1];
 
                 if (isRow) {
-                    console.log('oui')
                     if ((x + size) <= CONSTANTS.DIMENSION) {
                         for (let i = 0; i < size; i++) {
                             if (currBoard[y][x + i] == CONSTANTS.CHAR_WATER) {
@@ -130,14 +125,14 @@ class BattleshipController {
         return false;
     }
 
-    hit(index, char, isPlayer) {
+    hit(index: number, char: string, isPlayer: Boolean) {
         let y = index - 1;
         let x = CONSTANTS.CHARACTERS.indexOf(char);
 
         console.log('HIT : ' + index + ' ' + char);
 
         if (x >= 0 && x < CONSTANTS.DIMENSION && y >= 0 && y < CONSTANTS.DIMENSION) {
-            let targetBoat = isPlayer ? this.board : this.playerBoard;
+            let targetBoat: string[][] = isPlayer ? this.board : this.playerBoard;
 
             if (targetBoat[y][x] == CONSTANTS.CHAR_WATER) {
                 targetBoat[y][x] = CONSTANTS.CHAR_HIT;
@@ -150,7 +145,7 @@ class BattleshipController {
             else {
                 if (isPlayer === false) {
                     if (this.currentFocus == null) {
-                        this.currentFocus = {
+                        /*this.currentFocus = {
                             origin: {
                                 x: index,
                                 y: x
@@ -158,10 +153,10 @@ class BattleshipController {
                             isRow: true,
                             step: 1,
                             remainingLength: CONSTANTS.BOAT_SIZES[targetBoat[y][x] - 1] - 1
-                        }
+                        }*/
                     }
                     else {
-                        if (this.currentFocus.step > 0) {
+                        /*if (this.currentFocus.step > 0) {
                             this.currentFocus.step++;
                         }
                         else {
@@ -173,7 +168,7 @@ class BattleshipController {
                         if (this.currentFocus.remainingLength == 0) {
                             console.log('Boat killed !');
                             this.currentFocus = null;
-                        }
+                        }*/
                     }
 
                     console.log(this.currentFocus);
@@ -191,7 +186,7 @@ class BattleshipController {
 
     newHitBot() {
         if (this.currentFocus != null) {
-            let step = this.currentFocus.step;
+            /*let step = this.currentFocus.step;
             let index = this.currentFocus.origin.x;
             let charIndex = this.currentFocus.origin.y;
 
@@ -224,7 +219,7 @@ class BattleshipController {
                 else {
                     this.currentFocus.step = -1;
                 }
-            }
+            }*/
 
             //if (!hitted) this.newHitBot();
         }
@@ -232,15 +227,15 @@ class BattleshipController {
             let hitted = false;
 
             do {
-                let index = parseInt(Math.random() * CONSTANTS.DIMENSION);
-                let charIndex = parseInt(Math.random() * CONSTANTS.DIMENSION);
+                let index = Math.round(Math.random() * CONSTANTS.DIMENSION);
+                let charIndex = Math.round(Math.random() * CONSTANTS.DIMENSION);
                 let char = CONSTANTS.CHARACTERS[charIndex];
                 hitted = this.hit(index, char, false);
             } while (!hitted)
         }
     }
 
-    displayBoard(isPlayer) {
+    displayBoard(isPlayer: Boolean) {
         let currBoard = isPlayer ? this.playerBoard : this.board;
         let result = '            ';
 
@@ -271,4 +266,20 @@ class BattleshipController {
     }
 }
 
-module.exports = BattleshipController
+class Focus {
+    origin: Object;
+    isRow: Boolean;
+    step: number;
+    remainingLength: number;
+
+    constructor(x: number, y: number, boatType: number) {
+        this.origin = {
+            x,
+            y,
+        };
+
+        this.isRow = true;
+        this.step = 1;
+        this.remainingLength = CONSTANTS.BOAT_SIZES[boatType] - 1;
+    }
+}

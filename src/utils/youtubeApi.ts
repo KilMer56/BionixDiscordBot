@@ -5,10 +5,17 @@ const Utils = require('./discordUtils.js');
 
 const OAuth2 = google.auth.OAuth2;
 
+import * as Discord from "discord.js";
+
 /**
  * Youtube Api called to gets youtube informations
  */
-class YoutubeApi {
+export class YoutubeApi {
+    SCOPES: string[];
+    TOKEN_DIR: string;
+    TOKEN_PATH: string;
+    result: any;
+
     constructor() {
         this.SCOPES = ['https://www.googleapis.com/auth/youtube.readonly'];
         this.TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/';
@@ -24,7 +31,7 @@ class YoutubeApi {
      * @param {Object} credentials The authorization client credentials.
      * @param {function} callback The callback to call with the authorized client.
      */
-    authorize(credentials, callback) {
+    authorize(credentials: any, callback: Function) {
         var clientSecret = credentials.installed.client_secret;
         var clientId = credentials.installed.client_id;
         var redirectUrl = credentials.installed.redirect_uris[0];
@@ -32,7 +39,7 @@ class YoutubeApi {
         var oauth2Client = new OAuth2(clientId, clientSecret, redirectUrl);
 
         // Check if we have previously stored a token.
-        fs.readFile(this.TOKEN_PATH, (err, token) => {
+        fs.readFile(this.TOKEN_PATH, (err: any, token: any) => {
             if (err) {
                 this.getNewToken(oauth2Client, callback);
             } else {
@@ -50,7 +57,7 @@ class YoutubeApi {
      * @param {getEventsCallback} callback The callback to call with the authorized
      *     client.
      */
-    async getNewToken(oauth2Client, callback) {
+    async getNewToken(oauth2Client: any, callback: Function) {
         var authUrl = await oauth2Client.generateAuthUrl({
             access_type: 'offline',
             scope: this.SCOPES
@@ -63,9 +70,9 @@ class YoutubeApi {
             output: process.stdout
         });
 
-        rl.question('Enter the code from that page here: ', (code) => {
+        rl.question('Enter the code from that page here: ', (code: any) => {
             rl.close();
-            oauth2Client.getToken(code, (err, token) => {
+            oauth2Client.getToken(code, (err: any, token: any) => {
                 if (err) {
                     console.log('Error while trying to retrieve access token', err);
                     return;
@@ -82,7 +89,7 @@ class YoutubeApi {
      *
      * @param {Object} token The token to store to disk.
      */
-    storeToken(token) {
+    storeToken(token: Object) {
         try {
             fs.mkdirSync(this.TOKEN_DIR);
         } catch (err) {
@@ -90,7 +97,7 @@ class YoutubeApi {
                 throw err;
             }
         }
-        fs.writeFile(this.TOKEN_PATH, JSON.stringify(token), (err) => {
+        fs.writeFile(this.TOKEN_PATH, JSON.stringify(token), (err: any) => {
             if (err) throw err;
             console.log('Token stored to ' + this.TOKEN_PATH);
         });
@@ -100,15 +107,15 @@ class YoutubeApi {
      * Look for a list of 5 videos to run in discord
      * @param {String} title 
      */
-    async getVideosFromTitle(message, title) {
+    async getVideosFromTitle(message: Discord.Message, title: string) {
         // Load client secrets from a local file.
-        await fs.readFile('./client_secret.json', (err, content) => {
+        await fs.readFile('./client_secret.json', (err: any, content: any) => {
             if (err) {
                 console.log('Error loading client secret file: ' + err);
                 return;
             }
             // Authorize a client with the loaded credentials, then call the YouTube API.
-            this.authorize(JSON.parse(content), (auth) => {
+            this.authorize(JSON.parse(content), (auth: any) => {
                 var service = google.youtube('v3');
 
                 service.search.list({
@@ -117,7 +124,7 @@ class YoutubeApi {
                     maxResults: 5,
                     q: title,
                     type: "video"
-                }, (err, response) => {
+                }, (err: any, response: any) => {
                     if (err) {
                         console.log('The API returned an error: ' + err);
                         return;
@@ -129,7 +136,7 @@ class YoutubeApi {
                     } else {
                         console.log("FOUND " + videos.length + " videos !");
 
-                        let newResults = {};
+                        let newResults: LooseObject = {};
                         let textMessage = 'Select the video or ask for a different title!\n\n';
 
                         // stores the items into an object
@@ -157,15 +164,15 @@ class YoutubeApi {
      * Look for a list of 10 videos from a playlist
      * @param {String} playlistId 
      */
-    async getVideosFromPlaylist(message, playlistId) {
+    async getVideosFromPlaylist(message: Discord.Message, playlistId: string) {
         // Load client secrets from a local file.
-        await fs.readFile('./client_secret.json', (err, content) => {
+        await fs.readFile('./client_secret.json', (err: any, content: any) => {
             if (err) {
                 console.log('Error loading client secret file: ' + err);
                 return;
             }
             // Authorize a client with the loaded credentials, then call the YouTube API.
-            this.authorize(JSON.parse(content), (auth) => {
+            this.authorize(JSON.parse(content), (auth: any) => {
                 var service = google.youtube('v3');
 
                 // gets the list
@@ -174,7 +181,7 @@ class YoutubeApi {
                     part: 'snippet',
                     maxResults: 10,
                     playlistId: playlistId
-                }, (err, response) => {
+                }, (err: any, response: any) => {
                     if (err) {
                         console.log('The API returned an error: ' + err);
                         return;
@@ -213,4 +220,6 @@ class YoutubeApi {
     }
 }
 
-module.exports = YoutubeApi
+interface LooseObject {
+    [key: string]: any
+}
