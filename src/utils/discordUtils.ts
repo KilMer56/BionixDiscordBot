@@ -1,16 +1,17 @@
-
 import * as Discord from "discord.js";
 
 /**
  * List of frequently used methods
  */
 export default class DiscordUtils {
-
     /**
      * Gets the arguments of the current message
      */
     static getArgs(message: Discord.Message): string[] {
-        return message.content.trim().split(' ').slice(1);
+        return message.content
+            .trim()
+            .split(" ")
+            .slice(1);
     }
 
     /**

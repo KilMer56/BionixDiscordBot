@@ -1,11 +1,10 @@
-const fs = require('fs');
-const readline = require('readline');
-const { google } = require('googleapis');
-const Utils = require('./discordUtils.js');
+import * as fs from "fs";
+import * as Discord from "discord.js";
+import * as readline from "readline";
+import { google } from "googleapis";
+import DiscordUtils from "./discordUtils";
 
 const OAuth2 = google.auth.OAuth2;
-
-import * as Discord from "discord.js";
 
 /**
  * Youtube Api called to gets youtube informations
@@ -17,9 +16,12 @@ export class YoutubeApi {
     result: any;
 
     constructor() {
-        this.SCOPES = ['https://www.googleapis.com/auth/youtube.readonly'];
-        this.TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/';
-        this.TOKEN_PATH = this.TOKEN_DIR + 'youtube-token.json';
+        this.SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"];
+        this.TOKEN_DIR =
+            (process.env.HOME ||
+                process.env.HOMEPATH ||
+                process.env.USERPROFILE) + "/.credentials/";
+        this.TOKEN_PATH = this.TOKEN_DIR + "youtube-token.json";
 
         this.result = null;
     }
@@ -59,22 +61,25 @@ export class YoutubeApi {
      */
     async getNewToken(oauth2Client: any, callback: Function) {
         var authUrl = await oauth2Client.generateAuthUrl({
-            access_type: 'offline',
+            access_type: "offline",
             scope: this.SCOPES
         });
 
-        console.log('Authorize this app by visiting this url: \n' + authUrl);
+        console.log("Authorize this app by visiting this url: \n" + authUrl);
 
         var rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout
         });
 
-        rl.question('Enter the code from that page here: ', (code: any) => {
+        rl.question("Enter the code from that page here: ", (code: any) => {
             rl.close();
             oauth2Client.getToken(code, (err: any, token: any) => {
                 if (err) {
-                    console.log('Error while trying to retrieve access token', err);
+                    console.log(
+                        "Error while trying to retrieve access token",
+                        err
+                    );
                     return;
                 }
                 oauth2Client.credentials = token;
@@ -93,133 +98,146 @@ export class YoutubeApi {
         try {
             fs.mkdirSync(this.TOKEN_DIR);
         } catch (err) {
-            if (err.code != 'EEXIST') {
+            if (err.code != "EEXIST") {
                 throw err;
             }
         }
         fs.writeFile(this.TOKEN_PATH, JSON.stringify(token), (err: any) => {
             if (err) throw err;
-            console.log('Token stored to ' + this.TOKEN_PATH);
+            console.log("Token stored to " + this.TOKEN_PATH);
         });
     }
 
     /**
      * Look for a list of 5 videos to run in discord
-     * @param {String} title 
+     * @param {String} title
      */
     async getVideosFromTitle(message: Discord.Message, title: string) {
         // Load client secrets from a local file.
-        await fs.readFile('./client_secret.json', (err: any, content: any) => {
+        await fs.readFile("./client_secret.json", (err: any, content: any) => {
             if (err) {
-                console.log('Error loading client secret file: ' + err);
+                console.log("Error loading client secret file: " + err);
                 return;
             }
             // Authorize a client with the loaded credentials, then call the YouTube API.
             this.authorize(JSON.parse(content), (auth: any) => {
-                var service = google.youtube('v3');
+                var service = google.youtube("v3");
 
-                service.search.list({
-                    auth: auth,
-                    part: 'snippet',
-                    maxResults: 5,
-                    q: title,
-                    type: "video"
-                }, (err: any, response: any) => {
-                    if (err) {
-                        console.log('The API returned an error: ' + err);
-                        return;
-                    }
-                    var videos = response.data.items;
-
-                    if (videos.length == 0) {
-                        console.log('No video found.');
-                    } else {
-                        console.log("FOUND " + videos.length + " videos !");
-
-                        let newResults: LooseObject = {};
-                        let textMessage = 'Select the video or ask for a different title!\n\n';
-
-                        // stores the items into an object
-                        for (let key in videos) {
-                            let title = videos[key].snippet.title;
-
-                            newResults[key] = {
-                                videoId: videos[key].id.videoId,
-                                title
-                            };
-
-                            textMessage += `${key} | ${title}\n`;
+                service.search.list(
+                    {
+                        auth: auth,
+                        part: "snippet",
+                        maxResults: 5,
+                        q: title,
+                        type: "video"
+                    },
+                    (err: any, response: any) => {
+                        if (err) {
+                            console.log("The API returned an error: " + err);
+                            return;
                         }
+                        var videos = response.data.items;
 
-                        this.result = newResults;
+                        if (videos.length == 0) {
+                            console.log("No video found.");
+                        } else {
+                            console.log("FOUND " + videos.length + " videos !");
 
-                        Utils.displayText(message, textMessage);
+                            let newResults: LooseObject = {};
+                            let textMessage =
+                                "Select the video or ask for a different title!\n\n";
+
+                            // stores the items into an object
+                            for (let key in videos) {
+                                let title = videos[key].snippet.title;
+
+                                newResults[key] = {
+                                    videoId: videos[key].id.videoId,
+                                    title
+                                };
+
+                                textMessage += `${key} | ${title}\n`;
+                            }
+
+                            this.result = newResults;
+
+                            DiscordUtils.displayText(message, textMessage);
+                        }
                     }
-                });
+                );
             });
         });
     }
 
     /**
      * Look for a list of 10 videos from a playlist
-     * @param {String} playlistId 
+     * @param {String} playlistId
      */
     async getVideosFromPlaylist(message: Discord.Message, playlistId: string) {
         // Load client secrets from a local file.
-        await fs.readFile('./client_secret.json', (err: any, content: any) => {
+        await fs.readFile("./client_secret.json", (err: any, content: any) => {
             if (err) {
-                console.log('Error loading client secret file: ' + err);
+                console.log("Error loading client secret file: " + err);
                 return;
             }
             // Authorize a client with the loaded credentials, then call the YouTube API.
             this.authorize(JSON.parse(content), (auth: any) => {
-                var service = google.youtube('v3');
+                var service = google.youtube("v3");
 
                 // gets the list
-                service.playlistItems.list({
-                    auth: auth,
-                    part: 'snippet',
-                    maxResults: 10,
-                    playlistId: playlistId
-                }, (err: any, response: any) => {
-                    if (err) {
-                        console.log('The API returned an error: ' + err);
-                        return;
-                    }
-                    let items = response.data.items;
-
-                    if (items.length == 0) {
-                        console.log('No video found.');
-                    } else {
-                        console.log("FOUND " + items.length + " items !");
-
-                        let newResults = [];
-                        let textMessage = 'List following list of songs has been added!\n\n';
-
-                        // stores the items into an array
-                        for (let item of items) {
-                            if (item.snippet.resourceId && item.snippet.resourceId.kind == "youtube#video") {
-                                let title = item.snippet.title;
-
-                                newResults.push({
-                                    videoId: item.snippet.resourceId.videoId,
-                                    title: item.snippet.title
-                                });
-
-                                textMessage += ` - ${title}\n`;
-                            }
+                service.playlistItems.list(
+                    {
+                        auth: auth,
+                        part: "snippet",
+                        maxResults: 10,
+                        playlistId: playlistId
+                    },
+                    (err: any, response: any) => {
+                        if (err) {
+                            console.log("The API returned an error: " + err);
+                            return;
                         }
+                        let items = response.data.items;
 
-                        this.result = newResults;
+                        if (items.length == 0) {
+                            console.log("No video found.");
+                        } else {
+                            console.log("FOUND " + items.length + " items !");
 
-                        Utils.displayText(message, textMessage);
+                            let newResults = [];
+                            let textMessage =
+                                "List following list of songs has been added!\n\n";
+
+                            // stores the items into an array
+                            for (let item of items) {
+                                if (
+                                    item.snippet.resourceId &&
+                                    item.snippet.resourceId.kind ==
+                                        "youtube#video"
+                                ) {
+                                    let title = item.snippet.title;
+
+                                    newResults.push({
+                                        videoId:
+                                            item.snippet.resourceId.videoId,
+                                        title: item.snippet.title
+                                    });
+
+                                    textMessage += ` - ${title}\n`;
+                                }
+                            }
+
+                            this.result = newResults;
+
+                            DiscordUtils.displayText(message, textMessage);
+                        }
                     }
-                });
+                );
             });
         });
     }
 }
 
 interface LooseObject {
-    [key: string]: any
+    [key: string]: any;
 }
