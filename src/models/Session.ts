@@ -2,7 +2,7 @@
 import DiscordUtils from "../utils/discordUtils";
 import * as Discord from "discord.js";
 
-export class AudioController {
+export class Session {
     inChannel: Boolean;
     connection: Discord.VoiceConnection;
 

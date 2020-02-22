@@ -8,7 +8,7 @@ import * as Discord from "discord.js";
 import * as util from "util";
 
 // Get the command's functions
-import { AudioController } from "./src/controllers/AudioController";
+import { ChannelController } from "./src/controllers/ChannelController";
 import { YoutubeController } from "./src/controllers/YoutubeController";
 import { BattleshipController } from "./src/controllers/BattleshipController";
 
@@ -25,9 +25,9 @@ const log_stdout = process.stdout;
 const client: Discord.Client = new Discord.Client();
 const youtubeApi: YoutubeApi = new YoutubeApi();
 
-let audioController: AudioController = new AudioController();
+let channelController: ChannelController = new ChannelController();
 let youtubeController: YoutubeController = new YoutubeController(
-    audioController,
+    channelController,
     youtubeApi
 );
 let battleshipController: BattleshipController = new BattleshipController();
@@ -57,36 +57,8 @@ client.on("message", message => {
 
         if (command === "ping") {
             DiscordUtils.reply(message, "Pong!");
-        } else if (command === "audio") {
-            // --- VOICE CHANNEL BLOC ---
-            if (!message.guild) {
-                DiscordUtils.displayText(
-                    message,
-                    "No channel guild available !"
-                );
-                return;
-            }
-            if (args.length <= 0) {
-                DiscordUtils.displayText(
-                    message,
-                    "You need to add a function behind !"
-                );
-                return;
-            }
-
-            try {
-                switch (args[0]) {
-                    case "join":
-                        audioController.joinVoiceChannel(message);
-                        break;
-                    case "leave":
-                        audioController.leaveVoiceChannel(message);
-                        break;
-                    default:
-                }
-            } catch (e) {
-                console.log(e);
-            }
+        } else if (command === "channel") {
+            channelController.runCommand(message, args);
         } else if (command === "boat") {
             // --- BATTLESHIP BLOC ---
             switch (args[0]) {

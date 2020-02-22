@@ -3,6 +3,7 @@ import * as Discord from "discord.js";
 import * as readline from "readline";
 import { google } from "googleapis";
 import DiscordUtils from "./discordUtils";
+import { OAuth2Client } from "google-auth-library";
 
 const OAuth2 = google.auth.OAuth2;
 
@@ -59,7 +60,7 @@ export class YoutubeApi {
      * @param {getEventsCallback} callback The callback to call with the authorized
      *     client.
      */
-    async getNewToken(oauth2Client: any, callback: Function) {
+    async getNewToken(oauth2Client: OAuth2Client, callback: Function) {
         var authUrl = await oauth2Client.generateAuthUrl({
             access_type: "offline",
             scope: this.SCOPES
