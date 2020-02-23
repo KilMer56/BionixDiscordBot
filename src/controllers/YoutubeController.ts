@@ -97,7 +97,10 @@ export class YoutubeController {
             await this.youtubePlayer.addSongToQueue(song);
 
             if (this.dispatcher) {
-                DiscordUtils.displayText(message, "Song added to the queue");
+                DiscordUtils.displayText(
+                    message,
+                    `${songInfo.title} added to the queue`
+                );
             } else {
                 this.play(message);
             }
