@@ -4,6 +4,7 @@ import * as readline from "readline";
 import { google } from "googleapis";
 import DiscordUtils from "./DiscordUtils";
 import { OAuth2Client } from "google-auth-library";
+import { YoutubeSong } from "../models/YoutubeSong";
 
 const OAuth2 = google.auth.OAuth2;
 
@@ -14,7 +15,7 @@ export class YoutubeApi {
     SCOPES: string[];
     TOKEN_DIR: string;
     TOKEN_PATH: string;
-    result: any;
+    result: YoutubeSong[];
 
     constructor() {
         this.SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"];
@@ -144,7 +145,7 @@ export class YoutubeApi {
                         } else {
                             console.log("FOUND " + videos.length + " videos !");
 
-                            let newResults: LooseObject = {};
+                            let newResults: YoutubeSong[] = [];
                             let textMessage =
                                 "Select the video or ask for a different title!\n\n";
 
@@ -152,11 +153,13 @@ export class YoutubeApi {
                             for (let key in videos) {
                                 let title = videos[key].snippet.title;
 
-                                newResults[key] = {
-                                    videoId: videos[key].id.videoId,
-                                    title
-                                };
+                                const song: YoutubeSong = new YoutubeSong(
+                                    null,
+                                    title,
+                                    videos[key].id.videoId
+                                );
 
+                                newResults.push(song);
                                 textMessage += `${key} | ${title}\n`;
                             }
 
@@ -205,7 +208,7 @@ export class YoutubeApi {
                         } else {
                             console.log("FOUND " + items.length + " items !");
 
-                            let newResults = [];
+                            let newResults: YoutubeSong[] = [];
                             let textMessage =
                                 "List following list of songs has been added!\n\n";
 
@@ -217,13 +220,13 @@ export class YoutubeApi {
                                         "youtube#video"
                                 ) {
                                     let title = item.snippet.title;
+                                    const song: YoutubeSong = new YoutubeSong(
+                                        null,
+                                        title,
+                                        item.snippet.resourceId.videoId
+                                    );
 
-                                    newResults.push({
-                                        videoId:
-                                            item.snippet.resourceId.videoId,
-                                        title: item.snippet.title
-                                    });
-
+                                    newResults.push(song);
                                     textMessage += ` - ${title}\n`;
                                 }
                             }
@@ -237,8 +240,4 @@ export class YoutubeApi {
             });
         });
     }
-}
-
-interface LooseObject {
-    [key: string]: any;
 }

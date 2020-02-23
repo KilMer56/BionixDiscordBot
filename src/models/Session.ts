@@ -32,7 +32,7 @@ export class Session {
         }
     }
 
-    leaveVoiceChannel(message: Discord.Message) {
+    async leaveVoiceChannel(message: Discord.Message) {
         if (message.member.voiceChannel) {
             if (
                 message.guild.me.voiceChannelID !==
@@ -44,8 +44,10 @@ export class Session {
                 );
             } else {
                 try {
-                    message.member.voiceChannel.leave();
+                    await message.member.voiceChannel.leave();
                     DiscordUtils.displayText(message, "I left the channel");
+
+                    this.connection = null;
                     this.inChannel = false;
                 } catch (e) {
                     console.log("ERROR = " + e);
