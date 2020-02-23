@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as Discord from "discord.js";
 import * as readline from "readline";
 import { google } from "googleapis";
-import DiscordUtils from "./discordUtils";
+import DiscordUtils from "./DiscordUtils";
 import { OAuth2Client } from "google-auth-library";
 
 const OAuth2 = google.auth.OAuth2;

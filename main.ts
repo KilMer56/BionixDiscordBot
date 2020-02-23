@@ -1,6 +1,6 @@
 // Get the utils functions
-import DiscordUtils from "./src/utils/discordUtils";
-import { YoutubeApi } from "./src/utils/youtubeApi";
+import DiscordUtils from "./src/utils/DiscordUtils";
+import { YoutubeApi } from "./src/utils/YoutubeApi";
 
 // Get the packages
 import * as Discord from "discord.js";
@@ -60,61 +60,7 @@ client.on("message", message => {
         } else if (command === "channel") {
             channelController.runCommand(message, args);
         } else if (command === "boat") {
-            // --- BATTLESHIP BLOC ---
-            switch (args[0]) {
-                case "start":
-                    battleshipController.startGame(message);
-                    DiscordUtils.displayText(
-                        message,
-                        "THE BATTLE BEGINS\nYour board:\n" +
-                            battleshipController.displayBoard(true)
-                    );
-                    break;
-                case "placeBoat":
-                    const myArgs: string[] = DiscordUtils.getArgs(message);
-
-                    if (myArgs.length === 5) {
-                        const type = parseInt(myArgs[1]);
-                        const index = parseInt(myArgs[2]);
-                        const char = myArgs[3];
-                        const isRow = myArgs[4] == "true";
-
-                        battleshipController.addBoat(
-                            type,
-                            index,
-                            char,
-                            isRow,
-                            true
-                        );
-                        DiscordUtils.displayText(
-                            message,
-                            "Boat added !\n" +
-                                battleshipController.displayBoard(true)
-                        );
-                    }
-
-                    break;
-                case "hit":
-                    const myMyArgs = DiscordUtils.getArgs(message);
-
-                    if (myMyArgs.length === 3) {
-                        const index = parseInt(myMyArgs[1]);
-                        const char = myMyArgs[2];
-                        battleshipController.hit(index, char, true);
-                        battleshipController.newHitBot();
-                        DiscordUtils.displayText(
-                            message,
-                            "BOT :\n" + battleshipController.displayBoard(false)
-                        );
-                        DiscordUtils.displayText(
-                            message,
-                            "MOI :\n" + battleshipController.displayBoard(true)
-                        );
-                    }
-
-                    break;
-                default:
-            }
+            battleshipController.runCommand(message, args);
         } else if (command === "ytb") {
             // --- YOUTUBE BLOC ---
             if (!message.guild) {
@@ -123,7 +69,9 @@ client.on("message", message => {
                     "No channel guild available !"
                 );
                 return;
-            } else if (!youtubeController.audioController.connection) {
+            } else if (
+                !youtubeController.channelController.session.connection
+            ) {
                 DiscordUtils.displayText(message, "No current connection");
                 return;
             } else {

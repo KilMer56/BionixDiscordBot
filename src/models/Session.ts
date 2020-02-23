@@ -1,5 +1,5 @@
 // Get the utils functions
-import DiscordUtils from "../utils/discordUtils";
+import DiscordUtils from "../utils/DiscordUtils";
 import * as Discord from "discord.js";
 
 export class Session {

@@ -1,7 +1,7 @@
 import * as Discord from "discord.js";
-import { AudioController } from "./AudioController";
-import { YoutubeApi } from "../utils/youtubeApi";
-import DiscordUtils from "../utils/discordUtils";
+import { ChannelController } from "./ChannelController";
+import { YoutubeApi } from "../utils/YoutubeApi";
+import DiscordUtils from "../utils/DiscordUtils";
 
 // Get the youtube downloader package
 const ytdl = require("ytdl-core");
@@ -10,7 +10,7 @@ const ytdl = require("ytdl-core");
  * Youtube class that handles all the different commands
  */
 export class YoutubeController {
-    audioController: AudioController;
+    channelController: ChannelController;
     youtubeApi: YoutubeApi;
     volume: number;
     queue: Object[];
@@ -18,8 +18,8 @@ export class YoutubeController {
     dispatcher: any;
     stream: any;
 
-    constructor(audioController: AudioController, youtubeApi: YoutubeApi) {
-        this.audioController = audioController;
+    constructor(channelController: ChannelController, youtubeApi: YoutubeApi) {
+        this.channelController = channelController;
         this.youtubeApi = youtubeApi;
         this.volume = 0.3;
         this.queue = [];
@@ -33,10 +33,17 @@ export class YoutubeController {
      * @param {Message} message
      */
     async add(message: Discord.Message) {
-        if (this.audioController.inChannel) {
+        if (
+            this.channelController.session &&
+            this.channelController.session.inChannel
+        ) {
             const args = DiscordUtils.getArgs(message);
 
-            if (args.length > 1 && this.audioController.connection != null) {
+            if (
+                args.length > 1 &&
+                this.channelController.session &&
+                this.channelController.session.connection != null
+            ) {
                 const url = args[1];
 
                 // check if the url is valid
@@ -78,7 +85,7 @@ export class YoutubeController {
             const song: any = this.queue.shift();
 
             // start the song
-            this.dispatcher = this.audioController.connection
+            this.dispatcher = this.channelController.session.connection
                 .playStream(
                     ytdl(song.url, {
                         filter: "audioonly",
@@ -178,7 +185,7 @@ export class YoutubeController {
      * @param {Message} message
      */
     searchVideo(message: Discord.Message) {
-        if (this.audioController.inChannel) {
+        if (this.channelController.session.inChannel) {
             const title = message.content.match(/'([^']+)'/)[1];
 
             if (title && title.length > 3) {
@@ -194,7 +201,7 @@ export class YoutubeController {
      * @param {Message} message
      */
     getPlaylist(message: Discord.Message) {
-        if (this.audioController.inChannel) {
+        if (this.channelController.session.inChannel) {
             const playlistId = message.content.match(/'([^']+)'/)[1];
 
             if (playlistId && playlistId.length > 3) {
@@ -213,7 +220,7 @@ export class YoutubeController {
      * @param {Message} message
      */
     async loadPlaylist(message: Discord.Message) {
-        if (this.audioController.inChannel) {
+        if (this.channelController.session.inChannel) {
             const results = this.youtubeApi.result;
 
             if (results && results.length > 0) {
@@ -247,7 +254,7 @@ export class YoutubeController {
      * @param {Message} message
      */
     async select(message: Discord.Message) {
-        if (this.audioController.inChannel) {
+        if (this.channelController.session.inChannel) {
             const args = DiscordUtils.getArgs(message);
             const key = args.length == 2 ? args[1] : null;
 

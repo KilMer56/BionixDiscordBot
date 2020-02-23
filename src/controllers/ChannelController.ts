@@ -1,6 +1,6 @@
 // Get the utils functions
 import { Session } from "../models/Session";
-import DiscordUtils from "../utils/discordUtils";
+import DiscordUtils from "../utils/DiscordUtils";
 
 // Get the packages
 import * as Discord from "discord.js";
@@ -13,7 +13,6 @@ export class ChannelController {
     }
 
     runCommand(message: Discord.Message, args: string[]) {
-        // --- VOICE CHANNEL BLOC ---
         if (!message.guild) {
             DiscordUtils.displayText(message, "No channel guild available !");
             return;
