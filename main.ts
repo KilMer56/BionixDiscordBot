@@ -56,22 +56,22 @@ client.on("message", message => {
             .substring(1);
         const args: string[] = DiscordUtils.getArgs(message);
 
-        switch(command) {
-            case "ping": {
+        switch (command) {
+            case "ping":
                 DiscordUtils.reply(message, `Pong! (${client.ping}ms)`);
-            }
-            case "channel": {
+                break;
+            case "channel":
                 channelController.runCommand(message, args);
-            }
-            case "boat": {
+                break;
+            case "boat":
                 battleshipController.runCommand(message, args);
-            }
-            case "ytb": {
+                break;
+            case "ytb":
                 youtubeController.runCommand(message, args);
-            }
-            default: {
-                console.log(`Command "${command}" is not recognized`)
-            }
+                break;
+            default:
+                console.log(`Command "${command}" is not recognized`);
+                break;
         }
     }
 });
