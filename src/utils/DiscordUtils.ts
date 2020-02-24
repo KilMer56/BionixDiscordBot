@@ -18,7 +18,7 @@ export default class DiscordUtils {
      * Displays a text and logs it
      */
     static displayText(message: Discord.Message, text: string) {
-        console.log(text);
+        //console.log(text);
         message.channel.send(text);
     }
 
