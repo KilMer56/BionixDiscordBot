@@ -21,5 +21,9 @@ export const BATTLESHIP_CONSTANTS = {
         "N"
     ],
     INDEX_EMOJIS: ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"],
-    CHAR_EMOJIS: ["🅰️", ""]
+    CHAR_EMOJIS: ["🅰️", ""],
+    MISSED: "missed",
+    HIT: "hit",
+    ALREADY_HIT: "already_hit",
+    WRONG_TARGET: "wrong_target"
 };

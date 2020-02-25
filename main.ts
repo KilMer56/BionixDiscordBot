@@ -56,14 +56,22 @@ client.on("message", message => {
             .substring(1);
         const args: string[] = DiscordUtils.getArgs(message);
 
-        if (command === "ping") {
-            DiscordUtils.reply(message, "Pong!");
-        } else if (command === "channel") {
-            channelController.runCommand(message, args);
-        } else if (command === "boat") {
-            battleshipController.runCommand(message, args);
-        } else if (command === "ytb") {
-            youtubeController.runCommand(message, args);
+        switch (command) {
+            case "ping":
+                DiscordUtils.reply(message, `Pong! (${client.ping}ms)`);
+                break;
+            case "channel":
+                channelController.runCommand(message, args);
+                break;
+            case "boat":
+                battleshipController.runCommand(message, args);
+                break;
+            case "ytb":
+                youtubeController.runCommand(message, args);
+                break;
+            default:
+                console.log(`Command "${command}" is not recognized`);
+                break;
         }
     }
 });
