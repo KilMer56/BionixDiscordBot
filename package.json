@@ -20,7 +20,9 @@
         "google-auth-library": "^5.9.2",
         "googleapis": "^47.0.0",
         "opusscript": "0.0.7",
-        "ytdl-core": "^1.0.7"
+        "ytdl-core": "^1.0.7",
+        "minimist": ">=1.2.2",
+        "acorn": ">=7.1.1"
     },
     "devDependencies": {
         "@babel/cli": "^7.8.4",
