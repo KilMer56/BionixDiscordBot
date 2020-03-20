@@ -10,6 +10,7 @@ import * as util from "util";
 import { ChannelController } from "./src/controllers/ChannelController";
 import { YoutubeController } from "./src/controllers/YoutubeController";
 import { BattleshipController } from "./src/controllers/BattleshipController";
+import { PurgeController } from './src/controllers/PurgeController';
 
 // Get the configuration
 require("dotenv").config();
@@ -27,6 +28,7 @@ process.on("unhandledRejection", error =>
 const log_stdout = process.stdout;
 const client: Discord.Client = new Discord.Client();
 
+let purgeController: PurgeController = new PurgeController()
 let channelController: ChannelController = new ChannelController();
 let youtubeController: YoutubeController = new YoutubeController(
     channelController
@@ -68,6 +70,9 @@ client.on("message", message => {
                 break;
             case "ytb":
                 youtubeController.runCommand(message, args);
+                break;
+            case "purge":
+                purgeController.runCommand(message, args);
                 break;
             default:
                 console.log(`Command "${command}" is not recognized`);
