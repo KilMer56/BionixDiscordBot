@@ -10,7 +10,8 @@ import * as util from "util";
 import { ChannelController } from "./src/controllers/ChannelController";
 import { YoutubeController } from "./src/controllers/YoutubeController";
 import { BattleshipController } from "./src/controllers/BattleshipController";
-import { PurgeController } from './src/controllers/PurgeController';
+import { PurgeController } from "./src/controllers/PurgeController";
+import { HelpController } from "./src/controllers/HelpController";
 
 // Get the configuration
 require("dotenv").config();
@@ -28,7 +29,8 @@ process.on("unhandledRejection", error =>
 const log_stdout = process.stdout;
 const client: Discord.Client = new Discord.Client();
 
-let purgeController: PurgeController = new PurgeController()
+let helpController: HelpController = new HelpController();
+let purgeController: PurgeController = new PurgeController();
 let channelController: ChannelController = new ChannelController();
 let youtubeController: YoutubeController = new YoutubeController(
     channelController
@@ -61,6 +63,9 @@ client.on("message", message => {
         switch (command) {
             case "ping":
                 DiscordUtils.reply(message, `Pong! (${client.ping}ms)`);
+                break;
+            case "help":
+                helpController.runCommand(message, args);
                 break;
             case "channel":
                 channelController.runCommand(message, args);

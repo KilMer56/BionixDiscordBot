@@ -1,0 +1,18 @@
+{
+    "channel": {
+        "isList": true,
+        "desc": "Commands related to the current channel",
+        "options": [
+            {
+                "name": "join",
+                "args": [],
+                "desc": "The bot join the channel"
+            },
+            {
+                "name": "leave",
+                "args": [],
+                "desc": "The bot leave the channel"
+            }
+        ]
+    }
+}
