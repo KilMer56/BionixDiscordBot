@@ -9,14 +9,13 @@ export class BattleshipGame {
     user: Object;
     focus: BattleshipFocus;
     lastHitBoat: number;
+    nextTargets: Coordinate[];
 
     constructor() {
         this.board = this.buildBoard();
         this.playerBoard = this.buildBoard();
         this.generateRandomBoard();
-        this.addBoat(0, 1, "A", true, true);
-        this.addBoat(1, 3, "A", true, true);
-        this.addBoat(2, 5, "A", true, true);
+        this.nextTargets = [];
         this.isPlaying = true;
     }
 
@@ -59,7 +58,6 @@ export class BattleshipGame {
                 );
                 let char = BATTLESHIP_CONSTANTS.CHARACTERS[charIndex];
                 let isRow = Math.random() > 0.5;
-                console.log(`${i}, ${index}, ${char}, ${isRow}`);
 
                 boatPlaced = this.addBoat(i, index, char, isRow, false);
                 step++;
@@ -212,20 +210,41 @@ export class BattleshipGame {
         do {
             // Get the new target while it is valid
             target = this.getTargetCoordinate();
-        } while (
-            target == null ||
-            this.playerBoard[target.y][target.x] ==
-                BATTLESHIP_CONSTANTS.CHAR_HIT ||
-            this.playerBoard[target.y][target.x] ==
-                BATTLESHIP_CONSTANTS.CHAR_BOAT_HIT
-        );
+
+            // If it's already hit, update the focus
+            if (
+                target != null &&
+                (this.playerBoard[target.y][target.x] ==
+                    BATTLESHIP_CONSTANTS.CHAR_HIT ||
+                    this.playerBoard[target.y][target.x] ==
+                        BATTLESHIP_CONSTANTS.CHAR_BOAT_HIT)
+            ) {
+                this.updateFocus(BATTLESHIP_CONSTANTS.ALREADY_HIT);
+                target = null;
+            }
+        } while (target == null);
 
         // Hit the target
         let char = BATTLESHIP_CONSTANTS.CHARACTERS[target.x];
-        const result = this.hit(target.y, char, false);
+        let result = this.hit(target.y, char, false);
 
         // Update or create the focus on hit
         if (this.focus != null) {
+            // If we hit another boat, we add it to the waiting targets
+            if (
+                result == BATTLESHIP_CONSTANTS.HIT &&
+                this.focus.boatType !== this.lastHitBoat - 1
+            ) {
+                let newCoordinate = new Coordinate(
+                    target.x,
+                    target.y,
+                    this.lastHitBoat - 1
+                );
+
+                this.nextTargets.push(newCoordinate);
+                result = BATTLESHIP_CONSTANTS.MISSED;
+            }
+
             this.updateFocus(result);
         } else if (result == BATTLESHIP_CONSTANTS.HIT) {
             this.focus = new BattleshipFocus(
@@ -266,8 +285,11 @@ export class BattleshipGame {
                     this.focus.step = -1;
                     y += -1;
                 } else if (y + step < 0) {
+                    // If we loose the path, we restart from a random point
                     console.log("Loose path");
-                    return null;
+
+                    this.focus = null;
+                    return this.getRandomCoordinate();
                 } else {
                     y += step;
                 }
@@ -275,9 +297,18 @@ export class BattleshipGame {
         }
         // Else, generate new target randomly
         else {
-            x = Math.round(Math.random() * BATTLESHIP_CONSTANTS.DIMENSION);
-            y = Math.round(Math.random() * BATTLESHIP_CONSTANTS.DIMENSION);
+            return this.getRandomCoordinate();
         }
+
+        return new Coordinate(x, y);
+    }
+
+    /**
+     * Get a random coordinate in the board
+     */
+    getRandomCoordinate(): Coordinate {
+        const x = Math.round(Math.random() * BATTLESHIP_CONSTANTS.DIMENSION);
+        const y = Math.round(Math.random() * BATTLESHIP_CONSTANTS.DIMENSION);
 
         return new Coordinate(x, y);
     }
@@ -288,12 +319,16 @@ export class BattleshipGame {
      */
     updateFocus(result: string) {
         // If missed, change the direction
-        if (result == BATTLESHIP_CONSTANTS.MISSED) {
+        if (
+            result == BATTLESHIP_CONSTANTS.MISSED ||
+            result == BATTLESHIP_CONSTANTS.ALREADY_HIT
+        ) {
             if (this.focus.isRow) {
                 if (this.focus.step > 0) {
                     this.focus.step = -1;
                 } else {
                     this.focus.isRow = false;
+                    this.focus.step = 1;
                 }
             } else if (this.focus.step > 0) {
                 this.focus.step = -1;
@@ -305,7 +340,18 @@ export class BattleshipGame {
 
             if (this.focus.isBoatDown()) {
                 console.log("Boat down !!!");
-                this.focus = null;
+
+                // If we have a boat in the waiting targets, to target the first one
+                if (this.nextTargets.length > 0) {
+                    const newFocus = this.nextTargets.shift();
+                    this.focus = new BattleshipFocus(
+                        newFocus.x,
+                        newFocus.y,
+                        newFocus.boat
+                    );
+                } else {
+                    this.focus = null;
+                }
             } else {
                 if (this.focus.step > 0) {
                     this.focus.step++;

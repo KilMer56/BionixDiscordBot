@@ -5,6 +5,7 @@ export class BattleshipFocus {
     origin: Coordinate;
     isRow: Boolean;
     step: number;
+    boatType: number;
     remainingLength: number;
 
     constructor(x: number, y: number, boatType: number) {
@@ -12,6 +13,7 @@ export class BattleshipFocus {
 
         this.isRow = true;
         this.step = 1;
+        this.boatType = boatType;
         this.remainingLength = BATTLESHIP_CONSTANTS.BOAT_SIZES[boatType] - 1;
     }
 

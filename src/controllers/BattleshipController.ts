@@ -79,11 +79,11 @@ export class BattleshipController {
                         this.battleshipGame.hit(index, char, true);
                         this.battleshipGame.newHitBot();
 
-                        DiscordUtils.displayText(
-                            message,
-                            "BOT :\n" +
-                                this.battleshipGame.getStringBoard(false)
-                        );
+                        // DiscordUtils.displayText(
+                        //     message,
+                        //     "BOT :\n" +
+                        //         this.battleshipGame.getStringBoard(false)
+                        // );
                         DiscordUtils.displayText(
                             message,
                             "MOI :\n" + this.battleshipGame.getStringBoard(true)
