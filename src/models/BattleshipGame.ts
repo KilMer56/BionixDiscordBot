@@ -214,6 +214,7 @@ export class BattleshipGame {
             // If it's already hit, update the focus
             if (
                 target != null &&
+                this.focus != null &&
                 (this.playerBoard[target.y][target.x] ==
                     BATTLESHIP_CONSTANTS.CHAR_HIT ||
                     this.playerBoard[target.y][target.x] ==

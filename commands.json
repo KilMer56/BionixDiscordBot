@@ -1,6 +1,13 @@
 {
+    "help [command] [option]": {
+        "desc": "Display the help section of specific command (Arguments, description, etc.)",
+        "options": []
+    },
+    "ping": {
+        "desc": "Ping the bot to check if it's alive",
+        "options": []
+    },
     "channel": {
-        "isList": true,
         "desc": "Commands related to the current channel",
         "options": [
             {
@@ -12,6 +19,143 @@
                 "name": "leave",
                 "args": [],
                 "desc": "The bot leave the channel"
+            }
+        ]
+    },
+    "boat": {
+        "desc": "Commands related to a Battleship Game",
+        "options": [
+            {
+                "name": "start",
+                "args": [],
+                "desc": "Start a Battleship Game"
+            },
+            {
+                "name": "place",
+                "args": [
+                    {
+                        "name": "Boat type",
+                        "type": "Integer",
+                        "desc": "The boat the you want to place (>0)"
+                    },
+                    {
+                        "name": "Vertical coordinate",
+                        "type": "Integer",
+                        "desc": "The Vertical coordinate (>0)"
+                    },
+                    {
+                        "name": "Horizontal coordinate",
+                        "type": "Char",
+                        "desc": "The Horizontal coordinate (>'A')"
+                    },
+                    {
+                        "name": "Place boat in horizontal",
+                        "type": "Boolean",
+                        "desc": "If the boat is place vertically or horizontally"
+                    }
+                ],
+                "desc": "Place a boat at a specific coordinate"
+            },
+            {
+                "name": "hit",
+                "args": [
+                    {
+                        "name": "Vertical coordinate",
+                        "type": "Integer",
+                        "desc": "The Vertical coordinate (>0)"
+                    },
+                    {
+                        "name": "Horizontal coordinate",
+                        "type": "Char",
+                        "desc": "The Horizontal coordinate (>'A')"
+                    }
+                ],
+                "desc": "Hit the Bot to a specific starget"
+            }
+        ]
+    },
+    "ytb": {
+        "desc": "Commands related to the Youtube API",
+        "options": [
+            {
+                "name": "url",
+                "args": [
+                    {
+                        "name": "Url",
+                        "type": "String",
+                        "desc": "Url of the music video you want to load"
+                    }
+                ],
+                "desc": "Load a youtube music from a video url"
+            },
+            {
+                "name": "skip",
+                "args": [],
+                "desc": "Skip the current music and play the next one in the queue"
+            },
+            {
+                "name": "stop",
+                "args": [],
+                "desc": "Stop the current music and empty the queue"
+            },
+            {
+                "name": "volume",
+                "args": [
+                    {
+                        "name": "Ratio",
+                        "type": "Float",
+                        "desc": "The volume ratio (0<ratio<1)"
+                    }
+                ],
+                "desc": "Set the volume of the youtube player"
+            },
+            {
+                "name": "search",
+                "args": [
+                    {
+                        "name": "Title",
+                        "type": "String (ex: 'Test')",
+                        "desc": "The title of the youtube video you're looking for"
+                    }
+                ],
+                "desc": "Search a video from a title"
+            },
+            {
+                "name": "select",
+                "args": [
+                    {
+                        "name": "Number",
+                        "type": "Integer",
+                        "desc": "The number of the video in the proposed list"
+                    }
+                ],
+                "desc": "Select a video proposed after a title research"
+            },
+            {
+                "name": "pause",
+                "args": [],
+                "desc": "Put the youtube player in the 'quiet' mode"
+            },
+            {
+                "name": "resume",
+                "args": [],
+                "desc": "Resume the previous volume state"
+            },
+            {
+                "name": "getPlaylist",
+                "args": [
+                    {
+                        "name": "Playlist Id",
+                        "type": "String (ex: 'Id')",
+                        "desc": "The Id of the YouTube playlist to add"
+                    }
+                ],
+                "desc": "Get the list of 10 videos from a playlist Id"
+            },
+            {
+                "name": "loadPlaylist",
+                "args": [],
+                "desc": "Load the list of videos obtained from the 'getPlaylist' command"
             }
         ]
     }

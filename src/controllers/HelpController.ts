@@ -24,7 +24,7 @@ export class HelpController {
                 let command = commands[commandName];
                 message += "**/" + commandName + "** - " + command.desc + "\n";
 
-                if (command.isList) {
+                if (command.options.length) {
                     message += "\tOptions :\n";
 
                     for (let option of command.options) {
@@ -59,13 +59,13 @@ export class HelpController {
 
                     for (let arg of opt.args) {
                         message +=
-                            "\t*" +
+                            "\t**" +
                             arg.name +
-                            "* [" +
+                            "** [" +
                             arg.type +
-                            "] - " +
+                            "] - *" +
                             arg.desc +
-                            "\n";
+                            "*\n";
                     }
                 }
             }
