@@ -27,69 +27,24 @@ export class BattleshipController {
                 case "start":
                     console.log("start");
                     this.battleshipGame = new BattleshipGame();
-                    console.log(this.battleshipGame);
-                    //console.log(this.battleshipGame.getStringBoard(true));
-                    // DiscordUtils.displayText(
-                    //     message,
-                    //     "THE BATTLE BEGINS !\nYour board:\n" +
-                    //         this.battleshipGame.getStringBoard(false)
-                    // );
-                    this.printBoards(message);
+
+                    DiscordUtils.displayText(
+                        message,
+                        "THE BATTLE BEGINS !\nYour board:\n\n" +
+                            this.battleshipGame.getStringBoard(true) +
+                            "\n\nStart by placing your boats using : **/boat place [boatType] [number] [letter] [isRow]**" +
+                            "\n*Ex:* ***/boat place 1 4 B***" +
+                            "\nYou can also place your boats randomly with ***/boat place random***" +
+                            "\n" +
+                            this.battleshipGame.getBoatAvailables()
+                    );
                     break;
                 case "place":
-                    const myArgs: string[] = DiscordUtils.getArgs(message);
-
-                    if (myArgs.length === 5) {
-                        const type = parseInt(myArgs[1]) - 1;
-                        const index = parseInt(myArgs[2]) - 1;
-                        const char = myArgs[3];
-                        const isRow = myArgs[4] == "true";
-
-                        let result = this.battleshipGame.addBoat(
-                            type,
-                            index,
-                            char,
-                            isRow,
-                            true
-                        );
-
-                        if (!result) {
-                            DiscordUtils.displayText(
-                                message,
-                                "Coulnd't place the boat, try again !"
-                            );
-                        } else {
-                            this.printBoards(message);
-                        }
-                        // DiscordUtils.displayText(
-                        //     message,
-                        //     "Boat added !\n" +
-                        //         this.battleshipGame.getStringBoard(true)
-                        // );
-                    }
-
+                    this.placeBoats(message);
                     break;
+
                 case "hit":
-                    const myMyArgs = DiscordUtils.getArgs(message);
-
-                    if (myMyArgs.length === 3) {
-                        const index = parseInt(myMyArgs[1]) - 1;
-                        const char = myMyArgs[2];
-
-                        this.battleshipGame.hit(index, char, true);
-                        this.battleshipGame.newHitBot();
-
-                        // DiscordUtils.displayText(
-                        //     message,
-                        //     "BOT :\n" +
-                        //         this.battleshipGame.getStringBoard(false)
-                        // );
-                        DiscordUtils.displayText(
-                            message,
-                            "MOI :\n" + this.battleshipGame.getStringBoard(true)
-                        );
-                    }
-
+                    this.hitBoat(message);
                     break;
                 default:
             }
@@ -98,13 +53,125 @@ export class BattleshipController {
         }
     }
 
+    placeBoats(message: Discord.Message) {
+        const myArgs: string[] = DiscordUtils.getArgs(message);
+
+        if (myArgs.length == 2 && myArgs[1] == "random") {
+            this.battleshipGame.generateRandomBoard(true);
+
+            DiscordUtils.displayText(
+                message,
+                "All boats have been placed!!\nYour board:\n\n" +
+                    this.battleshipGame.getStringBoard(true) +
+                    "\n\nStart the game by hitting the opponent using : **/boat hit [number] [letter]**" +
+                    "\n*Ex:* ***/boat hit 3 A***"
+            );
+        } else if (myArgs.length >= 4) {
+            const type = parseInt(myArgs[1]) - 1;
+            const index = parseInt(myArgs[2]) - 1;
+            const char = myArgs[3];
+            const isRow =
+                myArgs.length == 4 ||
+                (myArgs.length == 5 && myArgs[4] == "true");
+
+            if (
+                !Object.keys(this.battleshipGame.remainingBoats).includes(
+                    type.toString()
+                )
+            ) {
+                DiscordUtils.displayText(
+                    message,
+                    "Boat already placed !\n" +
+                        this.battleshipGame.getBoatAvailables()
+                );
+
+                return;
+            }
+
+            let result = this.battleshipGame.addBoat(
+                type,
+                index,
+                char,
+                isRow,
+                true
+            );
+
+            if (!result) {
+                DiscordUtils.displayText(
+                    message,
+                    "Coulnd't place the boat, try again !"
+                );
+            } else {
+                if (Object.keys(this.battleshipGame.remainingBoats).length) {
+                    DiscordUtils.displayText(
+                        message,
+                        "Boat Placed !\nYour board:\n\n" +
+                            this.battleshipGame.getStringBoard(true) +
+                            "\n\n" +
+                            this.battleshipGame.getBoatAvailables()
+                    );
+                } else {
+                    DiscordUtils.displayText(
+                        message,
+                        "All boats have been placed!!\nYour board:\n\n" +
+                            this.battleshipGame.getStringBoard(true) +
+                            "\n\nStart the game by hitting the opponent using : **/boat hit [number] [letter]**" +
+                            "\n*Ex:* ***/boat hit 3 A***"
+                    );
+                }
+            }
+        }
+    }
+
+    hitBoat(message: Discord.Message) {
+        if (!this.battleshipGame.isPlaying) {
+            DiscordUtils.displayText(
+                message,
+                "You haven't placed all your boats !\nYour board:\n\n" +
+                    this.battleshipGame.getStringBoard(true) +
+                    "\n\n" +
+                    this.battleshipGame.getBoatAvailables()
+            );
+
+            return;
+        }
+
+        const myMyArgs = DiscordUtils.getArgs(message);
+
+        if (myMyArgs.length === 3) {
+            const index = parseInt(myMyArgs[1]) - 1;
+            const char = myMyArgs[2];
+
+            const res = this.battleshipGame.hit(index, char, true);
+            this.battleshipGame.newHitBot();
+
+            DiscordUtils.displayText(
+                message,
+                res +
+                    " !\nYour board:\n\n" +
+                    this.battleshipGame.getStringBoard(true) +
+                    "\n\nBot's board :\n\n" +
+                    this.battleshipGame.getStringBoard(false, true)
+            );
+        }
+    }
+
+    checkEndGame(message: Discord.Message, isPlayer: boolean) {
+        // if (isPlayer && this.battleshipGame.botBoats.length == 0) {
+        //     DiscordUtils.displayText(
+        //         message,
+        //         "Your board:\n" +
+        //             this.battleshipGame.getStringBoard(true) +
+        //             "\n"
+        //     );
+        //     this.battleshipGame = null;
+        // }
+    }
+
     printBoards(message) {
         DiscordUtils.displayText(
             message,
-            "THE BATTLE BEGINS !\nYour board:\n" +
-                this.battleshipGame.getStringBoard(true) +
-                "\n\nBot Board:\n" +
-                this.battleshipGame.getStringBoard(false)
+            "Your board:\n" + this.battleshipGame.getStringBoard(true) + "\n"
         );
     }
 }

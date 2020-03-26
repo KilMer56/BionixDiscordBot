@@ -3,7 +3,7 @@ import DiscordUtils from "../utils/DiscordUtils";
 import * as Discord from "discord.js";
 
 export class Session {
-    inChannel: Boolean;
+    inChannel: boolean;
     connection: Discord.VoiceConnection;
 
     constructor() {

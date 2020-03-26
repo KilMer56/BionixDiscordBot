@@ -3,7 +3,7 @@ import { Coordinate } from "./Coordinate";
 
 export class BattleshipFocus {
     origin: Coordinate;
-    isRow: Boolean;
+    isRow: boolean;
     step: number;
     boatType: number;
     remainingLength: number;

@@ -14,7 +14,7 @@ export class YoutubePlayer {
         this.stream = null;
     }
 
-    async addMusicUrl(url: string): Promise<Boolean> {
+    async addMusicUrl(url: string): Promise<boolean> {
         // check if the url is valid
         if (!(await ytdl.validateURL(url))) {
             return false;

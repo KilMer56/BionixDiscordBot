@@ -4,8 +4,10 @@ import { Coordinate } from "./Coordinate";
 
 export class BattleshipGame {
     board: any[];
+    playerBoats: { [key: number]: number };
+    botBoats: { [key: number]: number };
     playerBoard: string[][];
-    isPlaying: Boolean;
+    isPlaying: boolean;
     user: Object;
     focus: BattleshipFocus;
     lastHitBoat: number;
@@ -15,8 +17,20 @@ export class BattleshipGame {
         this.board = this.buildBoard();
         this.playerBoard = this.buildBoard();
         this.generateRandomBoard();
+        this.initRemainingBoats();
+
         this.nextTargets = [];
-        this.isPlaying = true;
+        this.isPlaying = false;
+    }
+
+    initRemainingBoats() {
+        this.playerBoats = {};
+        this.botBoats = {};
+
+        for (let index in BATTLESHIP_CONSTANTS.BOAT_SIZES) {
+            this.playerBoats[index] = BATTLESHIP_CONSTANTS.BOAT_SIZES[index];
+            this.botBoats[index] = BATTLESHIP_CONSTANTS.BOAT_SIZES[index];
+        }
     }
 
     /**
@@ -41,11 +55,11 @@ export class BattleshipGame {
     /**
      * Generate a random board with all the boats for the IA
      */
-    generateRandomBoard() {
+    generateRandomBoard(isPlayer = false) {
         let limit = 50;
 
         for (let i = 0; i < BATTLESHIP_CONSTANTS.BOAT_SIZES.length; i++) {
-            let boatPlaced: Boolean = false;
+            let boatPlaced: boolean = false;
             let step = 0;
 
             // Get random coordinates to place the boats
@@ -59,7 +73,8 @@ export class BattleshipGame {
                 let char = BATTLESHIP_CONSTANTS.CHARACTERS[charIndex];
                 let isRow = Math.random() > 0.5;
 
-                boatPlaced = this.addBoat(i, index, char, isRow, false);
+                boatPlaced = this.addBoat(i, index, char, isRow, isPlayer);
+
                 step++;
             } while (!boatPlaced && step < limit);
 
@@ -81,9 +96,9 @@ export class BattleshipGame {
         type: number,
         index: number,
         char: string,
-        isRow: Boolean,
-        isPlayer: Boolean
-    ): Boolean {
+        isRow: boolean,
+        isPlayer: boolean
+    ): boolean {
         // Check boat type
         if (type >= 0 && type < BATTLESHIP_CONSTANTS.BOAT_SIZES.length) {
             let y = index;
@@ -138,6 +153,7 @@ export class BattleshipGame {
 
                 // Update the board
                 if (isPlayer) {
+                    this.removeBoat(true, type);
                     this.playerBoard = currBoard;
                 } else {
                     this.board = currBoard;
@@ -158,7 +174,7 @@ export class BattleshipGame {
      * @param char The abscissa
      * @param isPlayer If the current player is an user
      */
-    hit(index: number, char: string, isPlayer: Boolean): string {
+    hit(index: number, char: string, isPlayer: boolean): string {
         let y = index;
         let x = BATTLESHIP_CONSTANTS.CHARACTERS.indexOf(char);
 
@@ -193,7 +209,18 @@ export class BattleshipGame {
                 this.lastHitBoat = parseInt(targetBoat[y][x]);
                 targetBoat[y][x] = BATTLESHIP_CONSTANTS.CHAR_BOAT_HIT;
 
-                console.log("hit !");
+                console.log("hit");
+
+                let remainingBoats = isPlayer
+                    ? this.botBoats
+                    : this.playerBoats;
+
+                remainingBoats[this.lastHitBoat - 1]--;
+
+                if (remainingBoats[this.lastHitBoat - 1] == 0) {
+                    this.removeBoat(isPlayer, this.lastHitBoat - 1);
+                }
+
                 return BATTLESHIP_CONSTANTS.HIT;
             }
         }
@@ -214,13 +241,15 @@ export class BattleshipGame {
             // If it's already hit, update the focus
             if (
                 target != null &&
-                this.focus != null &&
                 (this.playerBoard[target.y][target.x] ==
                     BATTLESHIP_CONSTANTS.CHAR_HIT ||
                     this.playerBoard[target.y][target.x] ==
                         BATTLESHIP_CONSTANTS.CHAR_BOAT_HIT)
             ) {
-                this.updateFocus(BATTLESHIP_CONSTANTS.ALREADY_HIT);
+                if (this.focus != null) {
+                    this.updateFocus(BATTLESHIP_CONSTANTS.ALREADY_HIT);
+                }
+
                 target = null;
             }
         } while (target == null);
@@ -229,30 +258,32 @@ export class BattleshipGame {
         let char = BATTLESHIP_CONSTANTS.CHARACTERS[target.x];
         let result = this.hit(target.y, char, false);
 
-        // Update or create the focus on hit
-        if (this.focus != null) {
-            // If we hit another boat, we add it to the waiting targets
-            if (
-                result == BATTLESHIP_CONSTANTS.HIT &&
-                this.focus.boatType !== this.lastHitBoat - 1
-            ) {
-                let newCoordinate = new Coordinate(
+        if (!this.isPlaying) {
+            return;
+        }
+
+        // If we hit another boat, we add it to the waiting targets
+        if (result == BATTLESHIP_CONSTANTS.HIT) {
+            if (this.focus != null) {
+                if (this.focus.boatType !== this.lastHitBoat - 1) {
+                    let newCoordinate = new Coordinate(
+                        target.x,
+                        target.y,
+                        this.lastHitBoat - 1
+                    );
+
+                    this.nextTargets.push(newCoordinate);
+                    result = BATTLESHIP_CONSTANTS.MISSED;
+                }
+
+                this.updateFocus(result);
+            } else {
+                this.focus = new BattleshipFocus(
                     target.x,
                     target.y,
                     this.lastHitBoat - 1
                 );
-
-                this.nextTargets.push(newCoordinate);
-                result = BATTLESHIP_CONSTANTS.MISSED;
             }
-
-            this.updateFocus(result);
-        } else if (result == BATTLESHIP_CONSTANTS.HIT) {
-            this.focus = new BattleshipFocus(
-                target.x,
-                target.y,
-                this.lastHitBoat - 1
-            );
         }
     }
 
@@ -308,8 +339,12 @@ export class BattleshipGame {
      * Get a random coordinate in the board
      */
     getRandomCoordinate(): Coordinate {
-        const x = Math.round(Math.random() * BATTLESHIP_CONSTANTS.DIMENSION);
-        const y = Math.round(Math.random() * BATTLESHIP_CONSTANTS.DIMENSION);
+        const x = Math.round(
+            Math.random() * (BATTLESHIP_CONSTANTS.DIMENSION - 1)
+        );
+        const y = Math.round(
+            Math.random() * (BATTLESHIP_CONSTANTS.DIMENSION - 1)
+        );
 
         return new Coordinate(x, y);
     }
@@ -340,8 +375,6 @@ export class BattleshipGame {
             this.focus.remainingLength--;
 
             if (this.focus.isBoatDown()) {
-                console.log("Boat down !!!");
-
                 // If we have a boat in the waiting targets, to target the first one
                 if (this.nextTargets.length > 0) {
                     const newFocus = this.nextTargets.shift();
@@ -363,11 +396,51 @@ export class BattleshipGame {
         }
     }
 
+    getBoatAvailables(): string {
+        let ret = "Remaining boats to place : ";
+
+        if (Object.keys(this.playerBoats).length) {
+            for (let boat in this.playerBoats) {
+                ret +=
+                    "[type: " +
+                    (parseInt(boat) + 1) +
+                    ", size: " +
+                    this.playerBoats[boat] +
+                    "] ";
+            }
+        } else {
+            ret = "All the boats have been placed !";
+        }
+
+        return ret;
+    }
+
+    removeBoat(isPlayer: boolean, boatType: number) {
+        console.log("Remove boat");
+        let boats = isPlayer ? this.botBoats : this.playerBoats;
+        delete boats[boatType];
+
+        if (Object.keys(boats).length == 0) {
+            if (!this.isPlaying) {
+                if (isPlayer) {
+                    this.isPlaying = true;
+                    this.initRemainingBoats();
+                }
+            } else {
+                this.isPlaying = false;
+            }
+        }
+    }
+
+    isPlayerWinner(): boolean {
+        return Object.keys(this.botBoats).length == 0;
+    }
+
     /**
      * Get the board in a string format (to be displayed)
      * @param isPlayer The player concerned
      */
-    getStringBoard(isPlayer: Boolean): string {
+    getStringBoard(isPlayer: boolean, blind: boolean = false): string {
         let currBoard = isPlayer ? this.playerBoard : this.board;
         let result = "            ";
 
@@ -375,14 +448,18 @@ export class BattleshipGame {
             result += BATTLESHIP_CONSTANTS.CHARACTERS[i] + "     ";
         }
 
-        result += "\n  --------------------------\n";
+        result += "\n\t--------------------------------------------\n";
 
         for (let i = 0; i < BATTLESHIP_CONSTANTS.DIMENSION; i++) {
             result += BATTLESHIP_CONSTANTS.INDEX_EMOJIS[i] + " |";
 
             for (let j = 0; j < BATTLESHIP_CONSTANTS.DIMENSION; j++) {
                 if (parseInt(currBoard[i][j]) > 0) {
+                    // if (blind) {
+                    //     result += ` ${BATTLESHIP_CONSTANTS.CHAR_WATER} `;
+                    // } else {
                     result += " ⛵ ";
+                    //}
                 } else {
                     result += ` ${currBoard[i][j]} `;
                 }
@@ -391,7 +468,7 @@ export class BattleshipGame {
             result += "|\n";
         }
 
-        result += "  --------------------------";
+        result += "\t--------------------------------------------";
 
         return result;
     }
