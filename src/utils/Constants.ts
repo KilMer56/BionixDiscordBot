@@ -3,7 +3,7 @@ export const BATTLESHIP_CONSTANTS = {
     CHAR_WATER: "🔵",
     CHAR_HIT: "❌",
     CHAR_BOAT_HIT: "🔥",
-    BOAT_SIZES: [3, 4, 5],
+    BOAT_SIZES: [3],
     CHARACTERS: [
         "A",
         "B",

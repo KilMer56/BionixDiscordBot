@@ -420,7 +420,12 @@ export class BattleshipGame {
         let boats = isPlayer ? this.botBoats : this.playerBoats;
         delete boats[boatType];
 
+        console.log(boats);
+        console.log(Object.keys(boats));
+        console.log(Object.keys(boats).length);
+
         if (Object.keys(boats).length == 0) {
+            console.log("enter");
             if (!this.isPlaying) {
                 if (isPlayer) {
                     this.isPlaying = true;
@@ -429,6 +434,8 @@ export class BattleshipGame {
             } else {
                 this.isPlaying = false;
             }
+
+            console.log(this.isPlaying);
         }
     }
 

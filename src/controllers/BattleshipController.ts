@@ -56,6 +56,7 @@ export class BattleshipController {
     placeBoats(message: Discord.Message) {
         const myArgs: string[] = DiscordUtils.getArgs(message);
 
+        // Place randomly the boats
         if (myArgs.length == 2 && myArgs[1] == "random") {
             this.battleshipGame.generateRandomBoard(true);
 
@@ -66,16 +67,19 @@ export class BattleshipController {
                     "\n\nStart the game by hitting the opponent using : **/boat hit [number] [letter]**" +
                     "\n*Ex:* ***/boat hit 3 A***"
             );
-        } else if (myArgs.length >= 4) {
+        }
+        // Place the boat with the specific arguments
+        else if (myArgs.length >= 4) {
             const type = parseInt(myArgs[1]) - 1;
             const index = parseInt(myArgs[2]) - 1;
-            const char = myArgs[3];
+            const char = myArgs[3].toUpperCase();
+
             const isRow =
                 myArgs.length == 4 ||
                 (myArgs.length == 5 && myArgs[4] == "true");
 
             if (
-                !Object.keys(this.battleshipGame.remainingBoats).includes(
+                !Object.keys(this.battleshipGame.playerBoats).includes(
                     type.toString()
                 )
             ) {
@@ -102,7 +106,7 @@ export class BattleshipController {
                     "Coulnd't place the boat, try again !"
                 );
             } else {
-                if (Object.keys(this.battleshipGame.remainingBoats).length) {
+                if (Object.keys(this.battleshipGame.playerBoats).length) {
                     DiscordUtils.displayText(
                         message,
                         "Boat Placed !\nYour board:\n\n" +
@@ -124,6 +128,7 @@ export class BattleshipController {
     }
 
     hitBoat(message: Discord.Message) {
+        // Check if the boat have been placed
         if (!this.battleshipGame.isPlaying) {
             DiscordUtils.displayText(
                 message,
@@ -140,38 +145,55 @@ export class BattleshipController {
 
         if (myMyArgs.length === 3) {
             const index = parseInt(myMyArgs[1]) - 1;
-            const char = myMyArgs[2];
+            const char = myMyArgs[2].toUpperCase();
 
+            // Perform the hit action by the player
             const res = this.battleshipGame.hit(index, char, true);
-            this.battleshipGame.newHitBot();
+            let isPlaying = this.battleshipGame.isPlaying;
 
-            DiscordUtils.displayText(
-                message,
-                res +
-                    " !\nYour board:\n\n" +
-                    this.battleshipGame.getStringBoard(true) +
-                    "\n\nBot's board :\n\n" +
-                    this.battleshipGame.getStringBoard(false, true)
-            );
+            // Perfom next hit bot if the player didn't finish the game
+            if (isPlaying) {
+                this.battleshipGame.newHitBot();
+                isPlaying = this.battleshipGame.isPlaying;
+            }
+
+            // If the game is finished, stop it and give the winner !
+            if (!isPlaying) {
+                this.endGame(message);
+            } else {
+                // Print the boards
+                DiscordUtils.displayText(
+                    message,
+                    res +
+                        "\nYour board:\n\n" +
+                        this.battleshipGame.getStringBoard(true) +
+                        "\n\nBot's board :\n\n" +
+                        this.battleshipGame.getStringBoard(false, true)
+                );
+            }
         }
     }
 
-    checkEndGame(message: Discord.Message, isPlayer: boolean) {
-        // if (isPlayer && this.battleshipGame.botBoats.length == 0) {
-        //     DiscordUtils.displayText(
-        //         message,
-        //         "Your board:\n" +
-        //             this.battleshipGame.getStringBoard(true) +
-        //             "\n"
-        //     );
-        //     this.battleshipGame = null;
-        // }
-    }
+    endGame(message: Discord.Message) {
+        let displayedTest = "";
 
-    printBoards(message) {
-        DiscordUtils.displayText(
-            message,
-            "Your board:\n" + this.battleshipGame.getStringBoard(true) + "\n"
-        );
+        if (this.battleshipGame.isPlayerWinner()) {
+            displayedTest +=
+                "🏆🏆🏆 **CONGRATULATIONS** 🏆🏆🏆\n**You are the winner !!!**";
+        } else {
+            displayedTest +=
+                "😔😔😔 **YOU LOST** 😔😔😔\n**The bot is the winner !!!**";
+        }
+
+        displayedTest +=
+            "\n\nYour board:\n\n" +
+            this.battleshipGame.getStringBoard(true) +
+            "\n\nBot's board :\n\n" +
+            this.battleshipGame.getStringBoard(false, false);
+
+        displayedTest +=
+            "\n\n*You can start a new game using* ***/boat start***\nThanks for playing !!!";
+
+        DiscordUtils.displayText(message, displayedTest);
     }
 }
