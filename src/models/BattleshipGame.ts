@@ -23,6 +23,10 @@ export class BattleshipGame {
         this.isPlaying = false;
     }
 
+    /**
+     * Init the list of the remaining boats (for player and bot)
+     * To track the evolution of the game later
+     */
     initRemainingBoats() {
         this.playerBoats = {};
         this.botBoats = {};
@@ -396,6 +400,9 @@ export class BattleshipGame {
         }
     }
 
+    /**
+     * Get the list of boat availables to place in the string format
+     */
     getBoatAvailables(): string {
         let ret = "Remaining boats to place : ";
 
@@ -415,17 +422,17 @@ export class BattleshipGame {
         return ret;
     }
 
+    /**
+     * Remove a boat from the correct remaining list to track evolution of the game
+     * @param isPlayer If it is the player that removes a boat
+     * @param boatType The targeted boat
+     */
     removeBoat(isPlayer: boolean, boatType: number) {
         console.log("Remove boat");
         let boats = isPlayer ? this.botBoats : this.playerBoats;
         delete boats[boatType];
 
-        console.log(boats);
-        console.log(Object.keys(boats));
-        console.log(Object.keys(boats).length);
-
         if (Object.keys(boats).length == 0) {
-            console.log("enter");
             if (!this.isPlaying) {
                 if (isPlayer) {
                     this.isPlaying = true;
@@ -434,11 +441,12 @@ export class BattleshipGame {
             } else {
                 this.isPlaying = false;
             }
-
-            console.log(this.isPlaying);
         }
     }
 
+    /**
+     * Check is the player is the winner
+     */
     isPlayerWinner(): boolean {
         return Object.keys(this.botBoats).length == 0;
     }
@@ -462,11 +470,11 @@ export class BattleshipGame {
 
             for (let j = 0; j < BATTLESHIP_CONSTANTS.DIMENSION; j++) {
                 if (parseInt(currBoard[i][j]) > 0) {
-                    // if (blind) {
-                    //     result += ` ${BATTLESHIP_CONSTANTS.CHAR_WATER} `;
-                    // } else {
-                    result += " ⛵ ";
-                    //}
+                    if (blind) {
+                        result += ` ${BATTLESHIP_CONSTANTS.CHAR_WATER} `;
+                    } else {
+                        result += " ⛵ ";
+                    }
                 } else {
                     result += ` ${currBoard[i][j]} `;
                 }

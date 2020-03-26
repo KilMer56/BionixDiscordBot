@@ -42,10 +42,21 @@ export class BattleshipController {
                 case "place":
                     this.placeBoats(message);
                     break;
-
                 case "hit":
                     this.hitBoat(message);
                     break;
+                case "stop":
+                    DiscordUtils.displayText(
+                        message,
+                        "Game stopped !!\nYour board:\n\n" +
+                            this.battleshipGame.getStringBoard(true) +
+                            "\n\nBot's board :\n\n" +
+                            this.battleshipGame.getStringBoard(false, false)
+                    );
+
+                    this.battleshipGame = null;
+                    break;
+
                 default:
             }
         } catch (e) {
