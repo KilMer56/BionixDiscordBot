@@ -3,7 +3,7 @@ import DiscordUtils from "./src/utils/DiscordUtils";
 
 // Get the packages
 import * as Discord from "discord.js";
-//import * as fs from "fs";
+import * as fs from "fs";
 import * as util from "util";
 
 // Get the command's functions
@@ -21,11 +21,11 @@ process.on("unhandledRejection", error =>
     console.error("Uncaught Promise Rejection", error)
 );
 
-// Prepare the log file
-// const log_file: fs.WriteStream = fs.createWriteStream(
-//   __dirname + "/logs/debug-" + Date.now() + ".log",
-//   { flags: "w" }
-// );
+//Prepare the log file
+const log_file: fs.WriteStream = fs.createWriteStream(
+    __dirname + "/logs/debug-" + Date.now() + ".log",
+    { flags: "w" }
+);
 const log_stdout = process.stdout;
 const client: Discord.Client = new Discord.Client();
 
@@ -41,7 +41,7 @@ let battleshipController: BattleshipController = new BattleshipController();
 console.log = function(d) {
     let text = "[*] " + util.format(d) + "\n";
 
-    //log_file.write(text);
+    log_file.write(text);
     log_stdout.write(text);
 };
 
