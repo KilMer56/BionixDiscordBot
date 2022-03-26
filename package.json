@@ -21,7 +21,7 @@
         "googleapis": "^47.0.0",
         "opusscript": "0.0.7",
         "ytdl-core": "^1.0.7",
-        "minimist": ">=1.2.2",
+        "minimist": ">=1.2.6",
         "acorn": ">=7.1.1"
     },
     "devDependencies": {
